@@ -22,6 +22,7 @@ class User(db.Model, UserMixin):
     date_of_birth = db.Column(db.Date)
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(20), unique=True)
+    readonly_fields = ['id_user','username', 'email', 'password_hash', 'role']  # Ví dụ: các trường không cho sửa
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

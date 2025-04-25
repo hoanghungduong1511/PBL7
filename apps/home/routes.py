@@ -62,10 +62,10 @@ def profile():
     class ProfileForm(FlaskForm):
         pass
 
-    readonly_fields = Users.readonly_fields
+    readonly_fields = User.readonly_fields
     full_width_fields = {"bio"}
 
-    for column in Users.__table__.columns:
+    for column in User.__table__.columns:
         if column.name == "id":
             continue
 
@@ -77,8 +77,8 @@ def profile():
         setattr(ProfileForm, field_name, field)
 
     for field_name in full_width_fields:
-        if field_name in Users.__table__.columns:
-            column = Users.__table__.columns[field_name]
+        if field_name in User.__table__.columns:
+            column = User.__table__.columns[field_name]
             field = getField(column)
             setattr(ProfileForm, field_name, field)
 

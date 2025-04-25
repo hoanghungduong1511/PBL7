@@ -64,6 +64,9 @@ def login():
 
             if password_check:
                 login_user(user)
+                print(current_user.is_authenticated)
+                print(current_user.full_name)
+                print(current_user.email)
                 print(">>> ✅ login_user DONE")
                 return redirect(url_for('home_blueprint.index'))
             else:

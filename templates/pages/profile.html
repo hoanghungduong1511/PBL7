@@ -67,11 +67,11 @@
                     <div class="card-block">
                         <div class="d-flex align-items-center justify-content-center flex-column">
                             <div class="w-50 p-3 text-center">
-                                <img src="{{ url_for('static', filename='assets/images/user/avatar.jpg') }}" alt="profile image" class="img-fluid rounded-circle">
+                                <img src="{{ url_for('static', filename='assets/images/user/avatar-2.jpg') }}" alt="profile image" class="img-fluid rounded-circle">
                             </div>
                             <div class="text-center">
                                 <h4 class="font-weight-bold h6">
-                                    {{ current_user.username }}
+                                    {{ current_user.full_name }}
                                 </h4>
                                 <p class="font-italic text-muted">
                                     {% if current_user.email %} {{ current_user.email }} {% endif %}
