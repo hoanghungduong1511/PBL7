@@ -59,6 +59,15 @@ class Config(object):
         config('DB_NAME')
     )
 
+    # Cấu hình thư mục lưu trữ file
+    # ------------------------------
+    UPLOAD_FOLDER = r"D:\My folder\HK8\PBL7\SRC\static\uploads"  # Đường dẫn tuyệt đối
+
+    # Các loại file cho phép tải lên
+    ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
+
+    # ------------------------------
     # ------------------------------
     # Dynamic DataTable (nếu có dùng)
     # ------------------------------

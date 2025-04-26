@@ -49,7 +49,6 @@ def login():
             username = login_form.username.data
             password = login_form.password.data
 
-            
 
             user = User.find_by_username(username) or User.find_by_email(username)
             if not user:

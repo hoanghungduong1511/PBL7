@@ -2,30 +2,19 @@
 
 {% block title %} Profile {% endblock %} 
 
-<!-- Specific CSS goes HERE -->
-{% block stylesheets %}{% endblock stylesheets %}
-
 {% block content %}
-
 <div class="pc-container">
     <div class="pc-content">
         <!-- [ breadcrumb ] start -->
         <div class="page-header">
             <div class="page-block">
-            <div class="row align-items-center">
-                <div class="col-md-12">
-                <div class="page-header-title">
-                    <h5 class="mb-0">Profile</h5>
+                <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="page-header-title">
+                            <h5 class="mb-0">Profile</h5>
+                        </div>
+                    </div>
                 </div>
-                </div>
-                <div class="col-md-12">
-                <ul class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="javascript: void(0)">Basic UI</a></li>
-                    <li class="breadcrumb-item" aria-current="page">Profile</li>
-                </ul>
-                </div>
-            </div>
             </div>
         </div>
         <!-- [ breadcrumb ] end -->
@@ -37,28 +26,61 @@
                         <h5>Edit Info</h5>
                     </div>
                     <div class="card-block px-4 pt-3">
-                        <form class="row" method="POST">
+                        <form class="row" method="POST" enctype="multipart/form-data" action="{{ url_for('home_blueprint.update_profile') }}">
                             {{ form.hidden_tag() }}
-
+                        
                             {% for field in form %}
                                 {% if field.type in ['CSRFTokenField', 'HiddenField'] %}
                                     {{ field() }}
                                 {% else %}
-                                    <div class="{% if field.name in full_width_fields %}col-sm-12{% else %}col-sm-6{% endif %}">
-                                        <div class="form-group">
-                                            <label for="" class="form-label">{{ field.name|replace_value("_") }} {% if field.name in readonly_fields %}(read-only){% endif %} </label>
-                                            {{ field(class_="form-control", readonly=True if field.name in readonly_fields else False) }}
+                                    <!-- Bỏ qua phần cv_file, avatar_file và date_of_birth -->
+                                    {% if field.name not in ['cv_file', 'avatar_file', 'date_of_birth'] %}
+                                        <div class="{% if field.name in full_width_fields %}col-sm-12{% else %}col-sm-6{% endif %}">
+                                            <div class="form-group">
+                                                <label for="" class="form-label">{{ field.name|replace_value("_") }} {% if field.name in readonly_fields %}(read-only){% endif %} </label>
+                                                
+                                                {% if field.name == 'username' %}
+                                                    <p class="form-control-static">{{ current_user.username }}</p>
+                                                {% else %}
+                                                    {{ field(class_="form-control", readonly=True if field.name in readonly_fields else False) }}
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                    </div>
+                                    {% endif %}
                                 {% endif %}
                             {% endfor %}
-
+                        
+                            <!-- Thêm trường ngày sinh (sử dụng input riêng biệt) -->
                             <div class="col-sm-12 mb-2">
                                 <div class="form-group">
-                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                    <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ current_user.date_of_birth }}">
                                 </div>
-                            </div>                                                
+                            </div>
+                        
+                            <!-- Thêm trường upload file PDF cho CV -->
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="cv_file" class="form-label">Upload CV (PDF)</label>
+                                    <input type="file" class="form-control" id="cv_file" name="cv_file" accept="application/pdf">
+                                </div>
+                            </div>
+                        
+                            <!-- Thêm trường upload file cho Avatar -->
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="avatar_file" class="form-label">Upload Avatar (Image)</label>
+                                    <input type="file" class="form-control" id="avatar_file" name="avatar_file" accept="image/*">
+                                </div>
+                            </div>
+                            
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                </div>
+                            </div>                                                 
                         </form>
+                        
                     </div>
                 </div>
             </div>
@@ -67,7 +89,15 @@
                     <div class="card-block">
                         <div class="d-flex align-items-center justify-content-center flex-column">
                             <div class="w-50 p-3 text-center">
-                                <img src="{{ url_for('static', filename='assets/images/user/avatar.jpg') }}" alt="profile image" class="img-fluid rounded-circle">
+                                <!-- Kiểm tra và hiển thị avatar người dùng hoặc ảnh mặc định nếu không có -->
+                                <div>
+                                    <h5>Avatar Preview:</h5>
+                                    <!-- Trực tiếp sử dụng tên file ảnh avatar từ cơ sở dữ liệu -->
+                                    <img src="{{ url_for('static', filename='uploads/avatar/' + current_user.avatar_file) }}" alt="profile image" class="img-fluid rounded-circle">
+                                </div>
+                                
+                                
+                                
                             </div>
                             <div class="text-center">
                                 <h4 class="font-weight-bold h6">
@@ -78,38 +108,53 @@
                                 </p>
                             </div>
                         </div>
-
+                    
                         <div class="small font-weight-light mt-4 text-center text-muted">
                             <p>
                                 This page is your private space.
                                 <br />
                             </p>
                         </div>
+                    
+                        <!-- Kiểm tra và hiển thị CV -->
                         <div class="d-flex justify-content-center align-items-center">
+                            {% if current_user.cv_file %}
+                                <!-- Liên kết mở CV trong tab mới -->
+                                <a href="{{ url_for('home_blueprint.view_cv') }}" target="_blank" class="btn btn-primary m-1">View Your CV</a>
+                            {% else %}
+                                <span class="text-muted">No CV uploaded.</span>
+                            {% endif %}
+                        </div>
                         
+                    
+                        <div class="d-flex justify-content-center align-items-center">
                             <a href="https://github.com/app-generator/app-generator" 
                             target="_blank" 
-                            class="h6 text-muted d-block m-1"><i
-                            class="icon feather icon-github"></i></a>
-
+                            class="h6 text-muted d-block m-1"><i class="icon feather icon-github"></i></a>
+                    
                             <a href="https://twitter.com/webappseed" 
                             target="_blank" 
-                            class="h6 text-muted d-block m-1"><i
-                            class="icon feather icon-twitter"></i></a>
-
+                            class="h6 text-muted d-block m-1"><i class="icon feather icon-twitter"></i></a>
+                    
                             <a href="https://appseed.us/support/" 
                             target="_blank" 
-                            class="h6 text-muted d-block m-1"><i
-                            class="icon feather icon-help-circle"></i></a>
-
+                            class="h6 text-muted d-block m-1"><i class="icon feather icon-help-circle"></i></a>
                         </div>
                     </div>
+                    
+                    
                 </div>
             </div>
+            
+            
         </div>
     </div>
 </div>
 {% endblock content %}
 
-<!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script src="{{ url_for('static', filename='assets/js/plugins/apexcharts.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/plugins/jsvectormap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/plugins/world.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/pages/dashboard-default.js') }}"></script>
+{% endblock javascripts %}

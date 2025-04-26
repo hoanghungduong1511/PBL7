@@ -22,6 +22,10 @@ class User(db.Model, UserMixin):
     date_of_birth = db.Column(db.Date)
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(20), unique=True)
+    
+    # Thêm trường để lưu trữ CV và Avatar
+    cv_file = db.Column(db.String(120), nullable=True)  # Đường dẫn file CV (PDF)
+    avatar_file = db.Column(db.String(120), nullable=True)  # Đường dẫn file Avatar (Image)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
