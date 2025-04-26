@@ -161,14 +161,20 @@
                     <img src="{{ url_for('static', filename='assets/images/user/avatar-2.jpg') }}" alt="user-image" class="user-avtar wid-35" />
                   </div>
                   <div class="flex-grow-1 ms-3">
-                    <h6 class="text-white mb-1">Carson Darrin 🖖</h6>
-                    <span class="text-white text-opacity-75">carson.darrin@company.io</span>
+                    {% if current_user.is_authenticated %}
+                      <h6 class="text-white mb-1">{{ current_user.full_name }} 🖖</h6>
+                      <span class="text-white text-opacity-75">{{ current_user.email }}</span>
+                    {% else %}
+                      <h6 class="text-white mb-1">Guest 🖖</h6>
+                      <span class="text-white text-opacity-75">Please login</span>
+                    {% endif %}
                   </div>
                 </div>
               </div>
               <div class="dropdown-body">
                 <div class="profile-notification-scroll position-relative" style="max-height: calc(100vh - 225px)">
-                  <a href="#" class="dropdown-item">
+                  {% if current_user.is_authenticated %}
+                  <a href="{{ url_for('home_blueprint.profile') }}" class="dropdown-item">
                     <span>
                       <svg class="pc-icon text-muted me-2">
                         <use xlink:href="#custom-setting-outline"></use>
@@ -192,6 +198,7 @@
                       <span>Change Password</span>
                     </span>
                   </a>
+                  {% endif %}
                   <div class="d-grid my-2">
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('authentication_blueprint.logout') }}" class="btn btn-primary">

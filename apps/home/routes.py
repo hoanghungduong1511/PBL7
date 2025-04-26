@@ -126,12 +126,54 @@ def getField(column):
     return wtforms.StringField(column.name.title())
 
 
-# ------------------------------
-# Custom template filter
-# ------------------------------
-@blueprint.app_template_filter("replace_value")
-def replace_value(value, arg):
-    return value.replace(arg, " ").title()
+
+@blueprint.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+
+    class ProfileForm(FlaskForm):
+        pass
+
+    readonly_fields = User.readonly_fields
+    full_width_fields = {"bio"}
+
+    for column in User.__table__.columns:
+        if column.name == "id":
+            continue
+
+        field_name = column.name
+        if field_name in full_width_fields:
+            continue
+
+        field = getField(column)
+        setattr(ProfileForm, field_name, field)
+
+    for field_name in full_width_fields:
+        if field_name in User.__table__.columns:
+            column = User.__table__.columns[field_name]
+            field = getField(column)
+            setattr(ProfileForm, field_name, field)
+
+    form = ProfileForm(obj=current_user)
+
+    if form.validate_on_submit():
+        readonly_fields.append("password")
+        excluded_fields = readonly_fields
+        for field_name, field_value in form.data.items():
+            if field_name not in excluded_fields:
+                setattr(current_user, field_name, field_value)
+
+        db.session.commit()
+        return redirect(url_for('home_blueprint.profile'))
+    
+    context = {
+        'segment': 'profile',
+        'form': form,
+        'readonly_fields': readonly_fields,
+        'full_width_fields': full_width_fields,
+    }
+    return render_template('pages/profile.html', **context)
+
 
 
 # ------------------------------
