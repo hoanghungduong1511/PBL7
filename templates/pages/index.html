@@ -3,27 +3,114 @@
 {% block title %}Home{% endblock title %}
 
 {% block content %}
-  <div class="pc-container">
-    <div class="pc-content">
-      <!-- [ breadcrumb ] start -->
-      <div class="page-header">
-        <div class="page-block">
-          <div class="row align-items-center">
-            <div class="col-md-12">
-              <div class="page-header-title">
-                <h5 class="mb-0">Home</h5>
-              </div>
-            </div>
-          </div>
-        </div>
+<div class="pc-container">
+  <div class="pc-content">
+    <!-- [ breadcrumb ] start -->
+    
+
+    <form method="GET" action="{{ url_for('home_blueprint.index') }}" class="row g-3 align-items-end mb-4">
+
+      <!-- Kinh nghiệm -->
+      <div class="col-md-3">
+        <label for="experience" class="form-label">Số năm kinh nghiệm</label>
+        <select class="form-select" name="experience">
+          <option value="">Tất cả</option>
+          {% for i in range(1, 11) %}
+            <option value="{{ i }}" {% if request.args.get('experience') == i|string %}selected{% endif %}>{{ i }} năm</option>
+          {% endfor %}
+        </select>
       </div>
-      <!-- [ breadcrumb ] end -->
+    
+      <!-- Vị trí tuyển dụng -->
+      <div class="col-md-3">
+        <label for="position" class="form-label">Vị trí tuyển dụng</label>
+        <select class="form-select" name="position">
+          <option value="">Tất cả vị trí</option>
+          {% for option in [
+            '.Net', 'Ai', 'Android', 'Angular', 'Automation Test', 'AWS', 'Ba', 'Backend',
+            'Big Data', 'Bigdata', 'Blockchain', 'C', 'C#', 'C++', 'C++ Dev', 'C++/C',
+            'C/C++', 'Ci/Cd', 'Ci/Cd Dev', 'Cicd Developer', 'Cloud (Aws)', 'Cloud Engineer',
+            'Cobol', 'Cocos Engineer', 'Cocos Game', 'Comtor', 'Cto', 'Data Analyst',
+            'Data Consultant', 'Data Engineer', 'Data Science', 'Data Scientist',
+            'Data Warehouse', 'Database', 'Database Dev', 'Database Engineer',
+            'Database Specialists', 'Dba', 'Dba And Database Developer', 'Delivery Manager',
+            'Devops', 'Drupal', 'Embedded', 'Flutter', 'Fpga', 'Fronend', 'Front End'
+            , 'Game Designer', 'Game Dev', 'Game Tester', 'Golang', 'Html',
+            'Html/Css/Javascript', 'Html5', 'Infra Engineer', 'Ios', 'Iot', 'It Help Desk',
+            'Java', 'Javascript', 'Junior', 'Kotlin', 'Machine Learning', 'Magento',
+            'Manual Test', 'Mi', 'Mobile', 'Node Js', 'Nodejs', 'Outsystem', 'Pattern Engineer',
+            'Php', 'Pm', 'Pm/Po', 'Pm/Po/Sm', 'Pm/Tl', 'Po', 'Pqa', 'Pqa Leader',
+            'Product Manager', 'Product Owner', 'Project Manager', 'Python', 'Python Dev',
+            'Qa', 'Qc', 'React Js', 'React Native', 'Reactjs', 'Rpa', 'Rtc', 'Ruby',
+            'Ruby On Rails', 'Sa', 'Salesforce', 'Salesforce Developer', 'Scrum Assistant',
+            'Scrum Master', 'Security Engineer', 'Senior Software Engineer', 'Server',
+            'Sharepoint', 'Sharepoint Developer', 'Sm', 'Software Architect',
+            'Software Technical Writer', 'Solution Architect', 'System Engineer', 'Ta',
+            'Team Lead', 'Technical Architect', 'Technical Leader', 'Tester', 'Thiết Kế Ui/Ux',
+            'Tl', 'Unity', 'Urgent', 'Vuejs', 'Web Rtc', 'Windows Phone', 'Wordpress',
+            'Xamarin'
+          ] %}
+            <option value="{{ option }}" {% if request.args.get('position') == option %}selected{% endif %}>
+              {{ option }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+    
+      <!-- Phương thức ứng tuyển -->
+      <div class="col-md-2">
+        <label for="job_type" class="form-label">Phương thức</label>
+        <select class="form-select" name="job_type">
+          <option value="">Tất cả</option>
+          <option value="online" {% if request.args.get('job_type') == 'online' %}selected{% endif %}>Apply Online</option>
+          <option value="offline" {% if request.args.get('job_type') == 'offline' %}selected{% endif %}>Apply Offline</option>
+        </select>
+      </div>
+    
+      <!-- Địa điểm -->
+      <div class="col-md-2">
+        <label for="location" class="form-label">Địa điểm</label>
+        <select class="form-select" name="location">
+          <option value="">Tất cả</option>
+          {% for province in [
+            'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu', 'Bắc Ninh',
+            'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau',
+            'Cần Thơ', 'Cao Bằng', 'Đà Nẵng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai',
+            'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Nội', 'Hà Tĩnh', 'Hải Dương',
+            'Hải Phòng', 'Hậu Giang', 'Hòa Bình', 'Hưng Yên', 'Khánh Hòa', 'Kiên Giang',
+            'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định',
+            'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình',
+            'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La',
+            'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang',
+            'Hồ Chí Minh', 'Trà Vinh', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
+          ] %}
+            <option value="{{ province }}" {% if request.args.get('location') == province %}selected{% endif %}>{{ province }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    
+      <!-- Nút tìm -->
+      <div class="col-md-1 d-grid">
+        <button type="submit" class="btn btn-outline-primary">Tìm</button>
+      </div>
+    
+      <!-- Nút đăng bài -->
+      <div class="col-md-1 d-grid">
+        <button type="button" class="btn btn-success shadow fw-bold" data-bs-toggle="modal" data-bs-target="#postJobModal">
+          + Đăng
+        </button>
+      </div>
+    
+    </form>
+    
+
       
       <!-- [ Main Content ] start -->
       <div class="row">
         {% for job in jobs %}
         <div class="col-md-6 col-xl-4">
-            <div class="card card-social" data-bs-toggle="modal" data-bs-target="#jobModal{{ job.id_job }}">
+          <div class="card card-social" title="Nhấp vào để xem thông tin chi tiết" data-bs-toggle="modal" data-bs-target="#jobModal{{ job.id_job }}">
                 <div class="card-body border-bottom">
                     <div class="row align-items-center justify-content-center">
                         <div class="col-auto">
@@ -50,14 +137,14 @@
                     </div>
                     <div class="text-center mt-2">
                         <span class="badge bg-{{ 'success' if job.job_type == 'online' else 'secondary' }}">
-                            {{ job.job_type }}
+                          Apply {{ job.job_type|capitalize }}
                         </span>
                     </div>
                 </div>
             </div>
 
             <!-- Modal -->
-            <!-- Modal -->
+            
 <div class="modal fade" id="jobModal{{ job.id_job }}" tabindex="-1" aria-labelledby="jobModalLabel{{ job.id_job }}" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -70,15 +157,16 @@
                 <table class="table table-bordered table-striped">
                     <tbody>
                         <tr>
-                            <th>Loại công việc</th>
-                            <td>{{ job.job_type }}</td>
+                            <th>Phương thức ứng tuyển</th>
+                            <td>{{ job.job_type|upper }}</td>
+
                         </tr>
                         <tr>
                             <th>Công ty</th>
                             <td>{{ job.company_name }}</td>
                         </tr>
                         <tr>
-                            <th>Vị trí</th>
+                            <th>Nơi làm việc</th>
                             <td>{{ job.location }}</td>
                         </tr>
                         <tr>
@@ -86,9 +174,14 @@
                             <td>{{ job.salary or 'Thỏa thuận' }}</td>
                         </tr>
                         <tr>
-                            <th>Mô tả</th>
-                            <td>{{ job.description or 'Không có mô tả' }}</td>
+                          <th>Mô tả</th>
+                          <td>{{ job.job_title }}</td>  <!-- hoặc job.description nếu bạn có dùng lại -->
                         </tr>
+                        <tr>
+                            <th>Kinh nghiệm yêu cầu</th>
+                            <td>{{ job.experience or 'Không yêu cầu' }} Năm </td>
+                        </tr>
+                      
                         <tr>
                             <th>Hạn nộp</th>
                             <td>{{ job.deadline }}</td>
@@ -97,6 +190,14 @@
                 </table>
             </div>
             <div class="modal-footer">
+              {% if job.job_type == 'online' %}
+              <form method="POST" action="{{ url_for('jobs_blueprint.apply_job', job_id=job.id_job) }}">
+                  <button type="submit" class="btn btn-primary" onclick="alert('Ứng tuyển thành công!')">
+                      Gửi CV của bạn
+                  </button>
+              </form>
+              {% endif %}
+              
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
@@ -107,24 +208,103 @@
       </div>
 
       <!-- Pagination -->
+      {% if not (request.args.experience or request.args.position or request.args.job_type or request.args.location) %}
       <div class="d-flex justify-content-center mt-4">
           {% if page > 1 %}
-              <a href="/?page={{ page - 1 }}" class="btn btn-outline-primary mx-1">Trang trước</a>
+              <a href="{{ url_for('home_blueprint.index',
+                                  page=page - 1,
+                                  experience=request.args.get('experience'),
+                                  position=request.args.get('position'),
+                                  job_type=request.args.get('job_type'),
+                                  location=request.args.get('location')) }}"
+                 class="btn btn-outline-primary mx-1">
+                  Trang trước
+              </a>
           {% endif %}
-          
+      
           {% for p in range(page - 2, page + 3) if p > 0 and p <= total_pages %}
-              <a href="/?page={{ p }}" class="btn {% if p == page %}btn-primary{% else %}btn-outline-primary{% endif %} mx-1">
+              <a href="{{ url_for('home_blueprint.index',
+                                  page=p,
+                                  experience=request.args.get('experience'),
+                                  position=request.args.get('position'),
+                                  job_type=request.args.get('job_type'),
+                                  location=request.args.get('location')) }}"
+                 class="btn {% if p == page %}btn-primary{% else %}btn-outline-primary{% endif %} mx-1">
                   {{ p }}
               </a>
           {% endfor %}
-          
+      
           {% if page < total_pages %}
-              <a href="/?page={{ page + 1 }}" class="btn btn-outline-primary mx-1">Trang sau</a>
+              <a href="{{ url_for('home_blueprint.index',
+                                  page=page + 1,
+                                  experience=request.args.get('experience'),
+                                  position=request.args.get('position'),
+                                  job_type=request.args.get('job_type'),
+                                  location=request.args.get('location')) }}"
+                 class="btn btn-outline-primary mx-1">
+                  Trang sau
+              </a>
           {% endif %}
       </div>
+      {% endif %}
+      
     </div>
+    <div class="modal fade" id="postJobModal" tabindex="-1" aria-labelledby="postJobModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" action="{{ url_for('jobs_blueprint.post_job') }}">
+
+
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="postJobModalLabel">Đăng bài tuyển dụng mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Tiêu đề công việc</label>
+                    <input name="job_title" required class="form-control">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Tên công ty</label>
+                    <input name="company_name" required class="form-control">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Nơi Làm Việc</label>
+                    <input name="location" required class="form-control">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Lương</label>
+                    <input name="salary" class="form-control">
+                  </div>
+                  <div class="col-md-12">
+                    <label class="form-label">Mô tả</label>
+                    <textarea name="description" rows="3" class="form-control"></textarea>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Hạn nộp</label>
+                    <input type="date" name="deadline" required class="form-control">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Kinh nghiệm yêu cầu</label>
+                    <input name="experience" class="form-control">
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-primary" type="submit">Đăng bài</button>
+                <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Hủy</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+    
   </div>
 
+
+  
 {% endblock content %}
 
 {% block extra_js %}

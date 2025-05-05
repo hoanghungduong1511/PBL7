@@ -37,7 +37,7 @@
                                     {% if field.name not in ['cv_file', 'avatar_file', 'date_of_birth'] %}
                                         <div class="{% if field.name in full_width_fields %}col-sm-12{% else %}col-sm-6{% endif %}">
                                             <div class="form-group">
-                                                <label for="" class="form-label">{{ field.name|replace_value("_") }} {% if field.name in readonly_fields %}(read-only){% endif %} </label>
+                                                <label for="" class="form-label">{{ field.name|replace("_", " ") }} {% if field.name in readonly_fields %}(read-only){% endif %}</label>
                                                 
                                                 {% if field.name == 'username' %}
                                                     <p class="form-control-static">{{ current_user.username }}</p>
@@ -73,13 +73,14 @@
                                     <input type="file" class="form-control" id="avatar_file" name="avatar_file" accept="image/*">
                                 </div>
                             </div>
-                            
+                        
                             <div class="col-sm-12 mb-2">
                                 <div class="form-group">
                                     <button type="submit" class="btn btn-primary">Update</button>
                                 </div>
                             </div>                                                 
                         </form>
+                        
                         
                     </div>
                 </div>
@@ -92,18 +93,17 @@
 
                                 <!-- Kiểm tra và hiển thị avatar người dùng hoặc ảnh mặc định nếu không có -->
                                 <div>
-                                    <h5>Avatar Preview:</h5>
+                                    <h5>Profile</h5>
                                     <!-- Trực tiếp sử dụng tên file ảnh avatar từ cơ sở dữ liệu -->
-                                    <img src="{{ url_for('static', filename='uploads/avatar/' + current_user.avatar_file) }}" alt="profile image" class="img-fluid rounded-circle">
+                                    <img src="{{ url_for('static', filename='uploads/avatar/' + (current_user.avatar_file if current_user.avatar_file else 'default_avatar.jpg')) }}" alt="profile image" class="img-fluid rounded-circle">
+
                                 </div>
                             
                             <div class="text-center">
                                 <h4 class="font-weight-bold h6">
                                     {{ current_user.full_name }}
                                 </h4>
-                                <p class="font-italic text-muted">
-                                    {% if current_user.email %} {{ current_user.email }} {% endif %}
-                                </p>
+                                
                             </div>
                         </div>
                     

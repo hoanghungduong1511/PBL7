@@ -1,7 +1,9 @@
 from flask import current_app, g
 import pymysql
 from urllib.parse import urlparse
-
+from apps import db
+from apps.jobs.models import Job
+from sqlalchemy import func
 def parse_mysql_uri(uri):
     parsed = urlparse(uri)
     return {
@@ -27,15 +29,31 @@ def get_db():
         )
     return g.db
 
-def get_jobs(offset=0, limit=9):
-    conn = get_db()
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM jobs ORDER BY deadline DESC LIMIT %s OFFSET %s", (limit, offset))
-        return cursor.fetchall()
+def get_jobs(offset=0, limit=9, experience=None, position=None, job_type=None, location=None):
+    query = Job.query
 
-def count_jobs():
-    conn = get_db()
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) as total FROM jobs")
-        result = cursor.fetchone()
-        return result['total']
+    if experience:
+        query = query.filter(func.lower(Job.experience).contains(experience.lower()))
+    if position:
+        query = query.filter(func.lower(Job.job_title).contains(position.lower()))
+    if job_type:
+        query = query.filter(func.lower(Job.job_type) == job_type.lower())
+    if location:
+        query = query.filter(func.lower(Job.location).contains(location.lower()))
+
+    return query.offset(offset).limit(limit).all()
+
+def count_jobs(experience=None, position=None, job_type=None, location=None):
+    query = Job.query
+
+    if experience:
+        query = query.filter(func.lower(Job.experience).contains(experience.lower()))
+    if position:
+        query = query.filter(func.lower(Job.job_title).contains(position.lower()))
+    if job_type:
+        query = query.filter(func.lower(Job.job_type) == job_type.lower())
+    if location:
+        query = query.filter(func.lower(Job.location).contains(location.lower()))
+
+    return query.count()
+

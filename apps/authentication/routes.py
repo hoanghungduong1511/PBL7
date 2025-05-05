@@ -148,4 +148,4 @@ def has_google():
 # ------------------------------
 @login_manager.unauthorized_handler
 def unauthorized_handler():
-    return redirect(url_for('authentication.login'))
+    return redirect(url_for('authentication_blueprint.login'))

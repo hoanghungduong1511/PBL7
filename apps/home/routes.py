@@ -29,13 +29,27 @@ from flask_wtf import FlaskForm
 @blueprint.route('/')
 @blueprint.route('/index')
 def index():
-    page = int(request.args.get('page', 1))  # Nếu không có 'page' thì mặc định là 1
-    per_page = 9  # Số lượng jobs mỗi trang
+    # Lấy các tham số lọc
+    experience = request.args.get('experience', '').strip()
+    position = request.args.get('position', '').strip().lower()
+    job_type = request.args.get('job_type', '').strip().lower()
+    location = request.args.get('location', '').strip().lower()
+    page = int(request.args.get('page', 1))
+    per_page = 9
     offset = (page - 1) * per_page
 
-    jobs = get_jobs(offset, per_page)
-    total = count_jobs()
-    total_pages = (total + per_page - 1) // per_page
+    is_filtering = any([experience, position, job_type, location])
+
+    if is_filtering:
+        # Nếu đang tìm kiếm → không phân trang, trả về tất cả job khớp
+        jobs = get_jobs(0, 1000, experience, position, job_type, location)
+        page = 1
+        total_pages = 1
+    else:
+        # Mặc định có phân trang
+        jobs = get_jobs(offset, per_page, experience, position, job_type, location)
+        total = count_jobs(experience, position, job_type, location)
+        total_pages = (total + per_page - 1) // per_page
 
     return render_template(
         'pages/index.html',
@@ -44,6 +58,8 @@ def index():
         page=page,
         total_pages=total_pages
     )
+
+
 
 
 # ------------------------------
@@ -127,52 +143,6 @@ def getField(column):
 
 
 
-@blueprint.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-
-    class ProfileForm(FlaskForm):
-        pass
-
-    readonly_fields = User.readonly_fields
-    full_width_fields = {"bio"}
-
-    for column in User.__table__.columns:
-        if column.name == "id":
-            continue
-
-        field_name = column.name
-        if field_name in full_width_fields:
-            continue
-
-        field = getField(column)
-        setattr(ProfileForm, field_name, field)
-
-    for field_name in full_width_fields:
-        if field_name in User.__table__.columns:
-            column = User.__table__.columns[field_name]
-            field = getField(column)
-            setattr(ProfileForm, field_name, field)
-
-    form = ProfileForm(obj=current_user)
-
-    if form.validate_on_submit():
-        readonly_fields.append("password")
-        excluded_fields = readonly_fields
-        for field_name, field_value in form.data.items():
-            if field_name not in excluded_fields:
-                setattr(current_user, field_name, field_value)
-
-        db.session.commit()
-        return redirect(url_for('home_blueprint.profile'))
-    
-    context = {
-        'segment': 'profile',
-        'form': form,
-        'readonly_fields': readonly_fields,
-        'full_width_fields': full_width_fields,
-    }
-    return render_template('pages/profile.html', **context)
 
 
 
@@ -352,3 +322,5 @@ def view_cv():
     else:
         flash('No CV uploaded.', 'warning')
         return redirect(url_for('authentication_blueprint.profile'))
+
+
