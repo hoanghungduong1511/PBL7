@@ -8,5 +8,5 @@ class ListSeeker(db.Model):
     id_list = db.Column(db.Integer, primary_key=True)
     id_job = db.Column(db.Integer, db.ForeignKey('jobs.id_job'))
     id_seeker = db.Column(db.Integer, db.ForeignKey('user.id_user'))
-    status = db.Column(db.String(50), default='applied')
+    status = db.Column(db.Enum('applied', 'approved', 'rejected'), default='applied')
     apply_date = db.Column(db.Date)

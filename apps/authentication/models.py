@@ -6,6 +6,7 @@ Authentication Models - chuẩn hóa với bảng 'user' trong MySQL
 from flask_login import UserMixin
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
+from apps.notifications.models import Notification
 
 
 from apps import db, login_manager
@@ -77,14 +78,15 @@ class User(db.Model, UserMixin):
 
     def delete_from_db(self):
         try:
+            # Xoá tất cả notification liên quan đến user
+            Notification.query.filter_by(user_id=self.id_user).delete()
+
             db.session.delete(self)
             db.session.commit()
         except SQLAlchemyError as e:
             db.session.rollback()
             db.session.close()
-            error = str(e.__dict__['orig'])
-            raise IntegrityError(error, 422)
-        return
+            raise Exception(f"Lỗi khi xoá user: {str(e)}")
 
 # Flask-Login user loader
 @login_manager.user_loader

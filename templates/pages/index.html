@@ -10,6 +10,8 @@
 
     <form method="GET" action="{{ url_for('home_blueprint.index') }}" class="row g-3 align-items-end mb-4">
 
+    <div class="collapse mb-4" id="searchFormWrapper">
+      <div class="row">
       <!-- Kinh nghiệm -->
       <div class="col-md-3">
         <label for="experience" class="form-label">Số năm kinh nghiệm</label>
@@ -91,67 +93,83 @@
       </div>
     
       <!-- Nút tìm -->
-      <div class="col-md-1 d-grid">
-        <button type="submit" class="btn btn-outline-primary">Tìm</button>
+      <div class="col-md-1 d-flex align-items-end">
+        <button type="submit" class="btn btn-outline-primary w-100">Tìm</button>
       </div>
-    
-      <!-- Nút đăng bài -->
-      <div class="col-md-1 d-grid">
-        <button type="button" class="btn btn-success shadow fw-bold" data-bs-toggle="modal" data-bs-target="#postJobModal">
-          + Đăng
-        </button>
-      </div>
+      
+      {% if current_user.role == 'HR' %}
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="button" class="btn btn-success fw-bold w-100" data-bs-toggle="modal" data-bs-target="#postJobModal">
+            + Đăng
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
     
     </form>
-    
-
-      
       <!-- [ Main Content ] start -->
-      <div class="row">
+      <div class="row g-3 pb-4">
         {% for job in jobs %}
         <div class="col-md-6 col-xl-4">
-          <div class="card card-social" title="Nhấp vào để xem thông tin chi tiết" data-bs-toggle="modal" data-bs-target="#jobModal{{ job.id_job }}">
-                <div class="card-body border-bottom">
-                    <div class="row align-items-center justify-content-center">
-                        <div class="col-auto">
-                            <i class="fas fa-briefcase text-primary f-36"></i>
-                        </div>
-                        <div class="col text-end">
-                            <h5 class="mb-0">{{ job.job_title }}</h5>
-                            <small class="text-muted">{{ job.company_name }}</small>
-                        </div>
+          <div class="card card-social shadow-sm border-0 h-100 d-flex flex-column"
+              style="border-radius: 0.5rem; overflow: hidden;"
+              data-bs-toggle="modal"
+              data-bs-target="#jobModal{{ job.id_job }}"
+              title="Nhấp để xem chi tiết">
+
+
+                <div class="card-body border-bottom bg-light rounded-top">
+                  <div class="row align-items-center justify-content-between">
+                    <div class="col-auto">
+                      <i class="fas fa-briefcase text-primary f-36"></i>
                     </div>
+                    <div class="col text-end">
+                      <h5 class="mb-0 fw-semibold text-dark">{{ job.job_title }}</h5>
+                      <small class="text-muted fst-italic">{{ job.company_name }}</small>
+                    </div>
+                  </div>
                 </div>
-                <div class="card-body">
-                    <div class="row align-items-center justify-content-center card-active">
-                        <div class="col-6">
-                            <h6 class="text-center m-b-10">
-                                <span class="text-muted m-r-5">Lương:</span>{{ job.salary or 'Thỏa thuận' }}
-                            </h6>
-                        </div>
-                        <div class="col-6">
-                            <h6 class="text-center m-b-10">
-                                <span class="text-muted m-r-5">Hạn nộp:</span>{{ job.deadline }}
-                            </h6>
-                        </div>
-                    </div>
-                    <div class="text-center mt-2">
-                        <span class="badge bg-{{ 'success' if job.job_type == 'online' else 'secondary' }}">
-                          Apply {{ job.job_type|capitalize }}
-                        </span>
-                    </div>
+
+                <div class="card-body bg-white rounded-bottom">
+                <div class="row text-center border-top pt-3">
+                  <div class="col-6 border-end">
+                    <div class="text-muted small">💰 Lương</div>
+                    <div class="fw-semibold text-dark">{{ job.salary or 'Thỏa thuận' }}</div>
+                  </div>
+                  <div class="col-6">
+                    <div class="text-muted small">📅 Hạn nộp</div>
+                    <div class="fw-semibold text-dark">{{ job.deadline }}</div>
+                  </div>
+                  <div class="col-12 mt-2">
+                    <div class="text-muted small">🏷️ Ngành nghề</div>
+                    <div class="fw-semibold text-dark">{{ job.industry or 'Không xác định' }}</div>
+                  </div>
+                  
+                </div>
+                <div class="text-center mt-3">
+                  <span class="badge rounded-pill px-3 py-2 fw-semibold text-white 
+                    {% if job.job_type == 'online' %}
+                      bg-success
+                    {% else %}
+                      bg-secondary
+                    {% endif %}">
+                    <i class="fas fa-laptop me-1"></i> Apply {{ job.job_type|capitalize }}
+                  </span>
                 </div>
             </div>
+        </div>
 
             <!-- Modal -->
             
-<div class="modal fade" id="jobModal{{ job.id_job }}" tabindex="-1" aria-labelledby="jobModalLabel{{ job.id_job }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="jobModalLabel{{ job.id_job }}">{{ job.job_title }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+        <div class="modal fade" id="jobModal{{ job.id_job }}" tabindex="-1" aria-labelledby="jobModalLabel{{ job.id_job }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="jobModalLabel{{ job.id_job }}">{{ job.job_title }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
             <div class="modal-body">
                 <!-- Bảng thông tin công việc -->
                 <table class="table table-bordered table-striped">
@@ -186,6 +204,11 @@
                             <th>Hạn nộp</th>
                             <td>{{ job.deadline }}</td>
                         </tr>
+                        <tr>
+                          <th>Ngành nghề</th>
+                          <td>{{ job.industry or 'Không xác định' }}</td>
+                        </tr>
+                        
                     </tbody>
                 </table>
             </div>
@@ -289,6 +312,10 @@
                     <label class="form-label">Kinh nghiệm yêu cầu</label>
                     <input name="experience" class="form-control">
                   </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Ngành nghề</label>
+                    <input name="industry" class="form-control" placeholder="Ví dụ: IT, Sales, Marketing">
+                  </div>                  
                 </div>
               </div>
               <div class="modal-footer">

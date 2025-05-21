@@ -7,7 +7,7 @@ import json
 import os
 import time
 import wtforms
-from flask import render_template, request, redirect, url_for, flash, current_app, send_file, abort
+from flask import render_template, request, redirect, url_for, flash, current_app, send_file, abort,session
 from io import BytesIO
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
@@ -29,7 +29,12 @@ from flask_wtf import FlaskForm
 @blueprint.route('/')
 @blueprint.route('/index')
 def index():
-    # Lấy các tham số lọc
+    # Phân quyền: Admin thì không cho xem trang này
+    role = session.get('role')
+    if role == 'Admin':
+        return redirect(url_for('home_blueprint.admin_home'))
+
+    # HR và Seeker được xem danh sách job
     experience = request.args.get('experience', '').strip()
     position = request.args.get('position', '').strip().lower()
     job_type = request.args.get('job_type', '').strip().lower()
@@ -41,12 +46,10 @@ def index():
     is_filtering = any([experience, position, job_type, location])
 
     if is_filtering:
-        # Nếu đang tìm kiếm → không phân trang, trả về tất cả job khớp
         jobs = get_jobs(0, 1000, experience, position, job_type, location)
         page = 1
         total_pages = 1
     else:
-        # Mặc định có phân trang
         jobs = get_jobs(offset, per_page, experience, position, job_type, location)
         total = count_jobs(experience, position, job_type, location)
         total_pages = (total + per_page - 1) // per_page
@@ -58,8 +61,6 @@ def index():
         page=page,
         total_pages=total_pages
     )
-
-
 
 
 # ------------------------------
@@ -80,6 +81,13 @@ def sample_page():
 @blueprint.route('/typography')
 def typography():
     return render_template('pages/typography.html', segment='typography')
+@blueprint.route('/admin/home')
+def admin_home():
+    return redirect(url_for('admin_blueprint.dashboard'))  # ✅ gọi đúng controller của admin
+
+
+
+
 
 # ------------------------------
 # Trang Profile (giữ nguyên)
@@ -322,5 +330,37 @@ def view_cv():
     else:
         flash('No CV uploaded.', 'warning')
         return redirect(url_for('authentication_blueprint.profile'))
+    
+@blueprint.route('/view_avatar/<int:user_id>')
+def view_avatar_by_id(user_id):
+    from apps.authentication.models import User
+    user = User.query.filter_by(id_user=user_id).first()
+
+    if user and user.avatar_file:
+        avatar_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatar', user.avatar_file)
+        if os.path.exists(avatar_path):
+            return send_file(avatar_path)
+
+    # fallback ảnh mặc định
+    default_avatar_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatar', 'default_avatar.jpg')
+    return send_file(default_avatar_path)
+
+
+
+
+@blueprint.route('/view_cv/<int:user_id>')
+def view_cv_by_id(user_id):
+    from apps.authentication.models import User
+    user = User.query.filter_by(id_user=user_id).first()
+
+    if user and user.cv_file:
+        cv_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'cv', user.cv_file)
+        if os.path.exists(cv_path):
+            return send_file(cv_path, mimetype='application/pdf')
+
+    return "CV not found", 404
+
+
+
 
 

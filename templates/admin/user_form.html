@@ -1,0 +1,66 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ 'Sửa' if action == 'edit' else 'Thêm' }} Người Dùng{% endblock %}
+
+{% block content %}
+<div class="pc-container">
+  <div class="pc-content">
+    <h2 class="mb-4">{{ 'Sửa' if action == 'edit' else 'Thêm' }} Người Dùng</h2>
+
+    <form method="POST">
+      <div class="row g-3">
+        {% if action == 'add' %}
+        <div class="col-md-6">
+          <label class="form-label">Tên đăng nhập</label>
+          <input type="text" name="username" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Mật khẩu</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+        {% endif %}
+
+        <div class="col-md-6">
+          <label class="form-label">Họ tên</label>
+          <input type="text" name="full_name" class="form-control"
+                 value="{{ user.full_name if action == 'edit' else '' }}" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control"
+                 value="{{ user.email if action == 'edit' else '' }}" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">SĐT</label>
+          <input type="text" name="phone" class="form-control"
+                 value="{{ user.phone if action == 'edit' else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Ngày sinh</label>
+          <input type="date" name="date_of_birth" class="form-control"
+                 value="{{ user.date_of_birth if action == 'edit' else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Vai trò</label>
+          <select name="role" class="form-select">
+            {% for r in ['Admin', 'HR', 'Seeker'] %}
+              <option value="{{ r }}"
+                {% if action == 'edit' and user.role == r %}selected{% endif %}>
+                {{ r }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 text-end">
+          <a href="{{ url_for('admin_blueprint.user_manager') }}" class="btn btn-secondary">Huỷ</a>
+          <button type="submit" class="btn btn-primary">{{ 'Cập nhật' if action == 'edit' else 'Thêm mới' }}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

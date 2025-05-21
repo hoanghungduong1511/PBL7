@@ -14,21 +14,14 @@
             </a>
           </li>
           <li class="dropdown pc-h-item">
-            <a
-              class="pc-head-link dropdown-toggle arrow-none m-0 trig-drp-search"
-              data-bs-toggle="dropdown"
-              href="#"
+            <a class="pc-head-link" 
+              data-bs-toggle="collapse"
+              href="#searchFormWrapper"
               role="button"
-              aria-haspopup="false"
               aria-expanded="false"
-            >
+              aria-controls="searchFormWrapper">
               <i data-feather="search"></i>
             </a>
-            <div class="dropdown-menu pc-h-dropdown drp-search">
-              <form class="px-3 py-2">
-                <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . ." />
-              </form>
-            </div>
           </li>
         </ul>
       </div>
@@ -36,109 +29,106 @@
       <div class="ms-auto">
         <ul class="list-unstyled">
           <li class="dropdown pc-h-item">
-            <a
-              class="pc-head-link dropdown-toggle arrow-none me-0"
+            <!-- hiển thị thông báo -->
+            <a class="pc-head-link dropdown-toggle arrow-none me-0"
               data-bs-toggle="dropdown"
               href="#"
               role="button"
               aria-haspopup="false"
-              aria-expanded="false"
-            >
+              aria-expanded="false">
               <i data-feather="bell"></i>
-              <span class="badge bg-success pc-h-badge">3</span>
+              <span class="badge bg-success pc-h-badge">0</span>
             </a>
-            <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
+            <!-- %%%%%%%%%% -->
+             <!-- Đây là div để hiển thị thông báo -->
+             <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
               <div class="dropdown-header d-flex align-items-center justify-content-between">
                 <h5 class="m-0">Notifications</h5>
-                <a href="#!" class="btn btn-link btn-sm">Mark all read</a>
+                <a href="#!" id="mark-all-read" class="btn btn-link btn-sm">Mark all read</a>
+
               </div>
-              <div class="dropdown-body text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
-                <p class="text-span">Today</p>
-                <div class="card mb-0">
-                  <div class="card-body">
-                    <div class="d-flex">
-                      <div class="flex-shrink-0">
-                        <img class="img-radius avtar rounded-0" src="{{ url_for('static', filename='assets/images/user/avatar-1.jpg') }}" alt="Generic placeholder image">
-                      </div>
-                      <div class="flex-grow-1 ms-3">
-                        <span class="float-end text-sm text-muted">2 min ago</span>
-                        <h5 class="text-body mb-2">UI/UX Design</h5>
-                        <p class="mb-0"
-                          >Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of
-                          type and scrambled it to make a type</p
-                        >
-                      </div>
-                    </div>
-                  </div>
+              <!-- end -->
+
+               <!-- Nội dung thông báo sẽ được JS chèn vào đây -->
+               <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                  fetch("/notifications/get")
+                    .then(response => response.json())
+                    .then(data => {
+                      const container = document.querySelector(".dropdown-body");
+                      const badge = document.querySelector(".pc-h-badge");
+                
+                      // Chỉ đếm số lượng thông báo chưa đọc
+                      const unreadCount = data.notifications.filter(n => n.status === 'unread').length;
+                      badge.textContent = unreadCount;
+                
+                      container.innerHTML = "";
+                
+                      if (data.success && data.notifications.length > 0) {
+                        data.notifications.forEach(noti => {
+                          const card = document.createElement("div");
+                          card.className = `card mb-0 ${noti.status === 'unread' ? 'bg-light' : ''}`;
+                
+                          card.innerHTML = `
+                            <div class="card-body noti-clickable" style="cursor: pointer;" data-id="${noti.id}">
+                              <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                  <img class="img-radius avtar rounded-circle"
+                                      src="${noti.avatar}" alt="avatar"
+                                      style="width: 40px; height: 40px; object-fit: cover;">
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                  <span class="float-end text-sm text-muted">${noti.created_at}</span>
+                                  <h5 class="text-body mb-2 ${noti.status === 'unread' ? 'fw-bold' : ''}">${noti.title}</h5>
+                                  <p class="mb-0">${noti.message}</p>
+                                </div>
+                              </div>
+                            </div>
+                          `;
+                
+                          // Gán sự kiện click để mark as read + redirect
+                          card.querySelector('.noti-clickable').addEventListener('click', () => {
+                            fetch("/notifications/mark_read", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ notification_id: noti.id })
+                            })
+                            .then(res => res.json())
+                            .then(result => {
+                              if (result.success) {
+                                // Sau khi mark xong thì chuyển trang
+                                window.location.href = "/my-jobs";
+                              }
+                            })
+                            .catch(err => {
+                              console.error("Lỗi khi mark as read:", err);
+                              window.location.href = "/my-jobs"; // fallback redirect
+                            });
+                          });
+                
+                          container.appendChild(card);
+                        });
+                      } else {
+                        container.innerHTML = `<div class="text-center py-3 text-muted">Không có thông báo nào</div>`;
+                      }
+                    })
+                    .catch(error => {
+                      console.error("Lỗi khi tải thông báo:", error);
+                      const container = document.querySelector(".dropdown-body");
+                      container.innerHTML = `<div class="text-center py-3 text-danger">Lỗi khi tải thông báo</div>`;
+                    });
+                });
+                </script>
+                
+                
+                <div class="dropdown-body text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
+                  <div class="text-center py-3 text-muted">Đang tải thông báo...</div>
                 </div>
-                <div class="card mb-0">
-                  <div class="card-body">
-                    <div class="d-flex">
-                      <div class="flex-shrink-0">
-                        <img class="img-radius avtar rounded-0" src="{{ url_for('static', filename='assets/images/user/avatar-2.jpg') }}" alt="Generic placeholder image">
-                      </div>
-                      <div class="flex-grow-1 ms-3">
-                        <span class="float-end text-sm text-muted">1 hour ago</span>
-                        <h5 class="text-body mb-2">Message</h5>
-                        <p class="mb-0">Lorem Ipsum has been the industry's standard dummy text ever since the 1500.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <p class="text-span">Yesterday</p>
-                <div class="card mb-0">
-                  <div class="card-body">
-                    <div class="d-flex">
-                      <div class="flex-shrink-0">
-                        <img class="img-radius avtar rounded-0" src="{{ url_for('static', filename='assets/images/user/avatar-3.jpg') }}" alt="Generic placeholder image">
-                      </div>
-                      <div class="flex-grow-1 ms-3">
-                        <span class="float-end text-sm text-muted">2 hour ago</span>
-                        <h5 class="text-body mb-2">Forms</h5>
-                        <p class="mb-0"
-                          >Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of
-                          type and scrambled it to make a type</p
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card mb-0">
-                  <div class="card-body">
-                    <div class="d-flex">
-                      <div class="flex-shrink-0">
-                        <img class="img-radius avtar rounded-0" src="{{ url_for('static', filename='assets/images/user/avatar-4.jpg') }}" alt="Generic placeholder image">
-                      </div>
-                      <div class="flex-grow-1 ms-3">
-                        <span class="float-end text-sm text-muted">12 hour ago</span>
-                        <h5 class="text-body mb-2">Challenge invitation</h5>
-                        <p class="mb-2"><span class="text-dark">Jonny aber</span> invites to join the challenge</p>
-                        <button class="btn btn-sm btn-outline-secondary me-2">Decline</button>
-                        <button class="btn btn-sm btn-primary">Accept</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card mb-0">
-                  <div class="card-body">
-                    <div class="d-flex">
-                      <div class="flex-shrink-0">
-                        <img class="img-radius avtar rounded-0" src="{{ url_for('static', filename='assets/images/user/avatar-5.jpg') }}" alt="Generic placeholder image">
-                      </div>
-                      <div class="flex-grow-1 ms-3">
-                        <span class="float-end text-sm text-muted">5 hour ago</span>
-                        <h5 class="text-body mb-2">Security</h5>
-                        <p class="mb-0"
-                          >Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of
-                          type and scrambled it to make a type</p
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                
+              <!-- end ở đây -->
+
               <div class="text-center py-2">
-                <a href="#!" class="link-danger">Clear all Notifications</a>
+                <a href="#!" id="clear-all-notifications" class="link-danger">Clear all Notifications</a>
               </div>
             </div>
           </li>
@@ -158,8 +148,15 @@
               <div class="dropdown-header d-flex align-items-center justify-content-between bg-primary">
                 <div class="d-flex my-2">
                   <div class="flex-shrink-0">
-                    <img src="{{ url_for('static', filename='assets/images/user/avatar-2.jpg') }}" alt="user-image" class="user-avtar wid-35" />
+                    <img src="{{
+                      url_for('static', filename='uploads/avatar/' ~ current_user.avatar_file)
+                      if current_user.avatar_file else
+                      url_for('static', filename='assets/images/user/avatar-default.jpg')
+                    }}"
+                    alt="user-image"
+                    class="user-avtar wid-35 rounded-circle" />
                   </div>
+                  
                   <div class="flex-grow-1 ms-3">
                     {% if current_user.is_authenticated %}
                       <h6 class="text-white mb-1">{{ current_user.full_name }} 🖖</h6>
@@ -182,14 +179,7 @@
                       <span>Settings</span>
                     </span>
                   </a>
-                  <a href="#" class="dropdown-item">
-                    <span>
-                      <svg class="pc-icon text-muted me-2">
-                        <use xlink:href="#custom-share-bold"></use>
-                      </svg>
-                      <span>Share</span>
-                    </span>
-                  </a>
+                  
                   <a href="#" class="dropdown-item">
                     <span>
                       <svg class="pc-icon text-muted me-2">
@@ -221,4 +211,62 @@
         </ul>
       </div>
     </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const clearBtn = document.getElementById("clear-all-notifications");
+      
+        if (clearBtn) {
+          clearBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+      
+            if (confirm("Bạn có chắc chắn muốn xoá tất cả thông báo?")) {
+              fetch("/notifications/clear_all", {
+                method: "POST"
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  // Reload lại dropdown
+                  location.reload(); // hoặc gọi lại fetch("/notifications/get")
+                } else {
+                  alert("Lỗi khi xoá thông báo: " + data.message);
+                }
+              })
+              .catch(err => {
+                console.error("Xoá thất bại:", err);
+              });
+            }
+          });
+        }
+      });
+      </script>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const markAllBtn = document.getElementById("mark-all-read");
+        
+          if (markAllBtn) {
+            markAllBtn.addEventListener("click", function (e) {
+              e.preventDefault();
+        
+              fetch("/notifications/mark_all_read", {
+                method: "POST"
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  // Cập nhật lại giao diện sau khi mark
+                  location.reload(); // hoặc gọi lại fetch("/notifications/get")
+                } else {
+                  alert("Lỗi khi đánh dấu đã đọc: " + data.message);
+                }
+              })
+              .catch(err => {
+                console.error("Mark all read thất bại:", err);
+              });
+            });
+          }
+        });
+        </script>
+        
+      
 </header>

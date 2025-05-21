@@ -3,7 +3,7 @@
 Authentication Routes (Login / Logout / Register) - sử dụng bảng 'user' chuẩn hóa
 """
 
-from flask import render_template, redirect, request, url_for, flash
+from flask import render_template, redirect, request, url_for, flash, session
 from flask_login import current_user, login_user, logout_user
 from flask_dance.contrib.github import github
 from flask_dance.contrib.google import google
@@ -63,10 +63,9 @@ def login():
 
             if password_check:
                 login_user(user)
-                print(current_user.is_authenticated)
-                print(current_user.full_name)
-                print(current_user.email)
+                session['role'] = user.role
                 print(">>> ✅ login_user DONE")
+                print(">>> ROLE: ",user.role)
                 return redirect(url_for('home_blueprint.index'))
             else:
                 print(">>> ❌ Wrong password")

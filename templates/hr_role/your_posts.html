@@ -1,0 +1,271 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="pc-container">
+  <div class="pc-content">
+    <h2 class="mb-4">Your Job Posts</h2>
+
+    {% if jobs %}
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Job Title</th>
+            <th>Company</th>
+            <th>Type</th>
+            <th>Location</th>
+            <th>Salary</th>
+            <th>Experience</th>
+            <th>Deadline</th>
+            <th>Applicants</th>
+            <th>Industry</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ job.job_title }}</td>
+            <td>{{ job.company_name }}</td>
+            <td>{{ job.job_type }}</td>
+            <td>{{ job.location }}</td>
+            <td>{{ job.salary }}</td>
+            <td>{{ job.experience }}</td>
+            <td>{{ job.deadline.strftime('%d/%m/%Y') }}</td>
+            <td>{{ job_applicants[job.id_job].industry or 'N/A' }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary toggle-applicants"
+                      type="button"
+                      data-target="#collapseApplicants{{ job.id_job }}">
+                View Applicants
+              </button>
+            </td>
+          </tr>
+
+          <!-- Collapse section -->
+          <tr class="collapse" id="collapseApplicants{{ job.id_job }}">
+            <td colspan="9">
+              <div class="card card-body" style="margin-left: 20px;">
+                {% if job_applicants[job.id_job] %}
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th>Avatar</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>CV</th>
+                        <th>Applied At</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for applicant in job_applicants[job.id_job] %}
+                      <tr class="unread">
+                        <td>
+                          <img class="rounded-circle" width="40"
+                               src="{{ url_for('static', filename='uploads/avatar/' + applicant.avatar_file) if applicant.avatar_file else url_for('static', filename='assets/images/user/avatar-1.jpg') }}"
+                               alt="avatar">
+                        </td>
+                        <td><h6 class="mb-1">{{ applicant.full_name }}</h6></td>
+                        <td>{{ applicant.email }}</td>
+                        <td>{{ applicant.phone or 'N/A' }}</td>
+                        <td>
+                          {% if applicant.cv_file %}
+                          <a href="{{ url_for('static', filename='uploads/cv/' + applicant.cv_file) }}"
+                             target="_blank"
+                             class="btn btn-sm btn-outline-info">View CV</a>
+                          {% else %}
+                          <span class="text-muted">No CV</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <h6 class="text-muted">
+                            <i class="fas fa-circle text-success f-10 m-r-15"></i>{{ applicant.apply_time }}
+                          </h6>
+                        </td>
+                        <td class="status-col">
+                          <!-- Hiển thị trạng thái của ứng viên -->
+                          {{ applicant.status.capitalize() if applicant.status else 'Applied' }}
+                        </td>
+                        <td class="actions-col">
+                          {% if applicant.status == 'approved' %}
+                            <!-- Nếu đã approved, chỉ hiển thị nút Reject -->
+                            <button class="btn btn-sm btn-danger shadow-sm btn-action"
+                                    data-id="{{ applicant.id_user }}" 
+                                    data-job="{{ job.id_job }}" 
+                                    data-action="reject">
+                              Reject
+                            </button>
+                          {% elif applicant.status == 'rejected' %}
+                            <!-- Nếu đã rejected, chỉ hiển thị nút Approve -->
+                            <button class="btn btn-sm btn-success shadow-sm btn-action"
+                                    data-id="{{ applicant.id_user }}" 
+                                    data-job="{{ job.id_job }}" 
+                                    data-action="approve">
+                              Approve
+                            </button>
+                          {% else %}
+                            <!-- Nếu trạng thái là 'Applied', hiển thị cả hai nút -->
+                            <button class="btn btn-sm btn-success shadow-sm btn-action"
+                                    data-id="{{ applicant.id_user }}" 
+                                    data-job="{{ job.id_job }}" 
+                                    data-action="approve">
+                              Approve
+                            </button>
+                            <button class="btn btn-sm btn-danger shadow-sm btn-action"
+                                    data-id="{{ applicant.id_user }}" 
+                                    data-job="{{ job.id_job }}" 
+                                    data-action="reject">
+                              Reject
+                            </button>
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>                    
+                  </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No applicants yet.</p>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted">Bạn chưa đăng công việc nào.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const toggleButtons = document.querySelectorAll('.toggle-applicants');
+
+  toggleButtons.forEach(button => {
+    button.addEventListener('click', function () {
+      const targetSelector = this.getAttribute('data-target');
+      const targetRow = document.querySelector(targetSelector);
+
+      if (targetRow) {
+        targetRow.classList.toggle('show'); // Bootstrap dùng .show để hiển thị collapse
+      }
+    });
+  });
+});
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Sử dụng event delegation để gán sự kiện cho các nút hành động
+    document.querySelector('tbody').addEventListener('click', function (event) {
+      if (event.target.classList.contains('btn-action')) {
+        const button = event.target;
+        const userId = button.dataset.id;  // Lấy ID của người dùng (id_user)
+        const jobId = button.dataset.job;  // Lấy ID của công việc (id_job)
+        let action = button.dataset.action;  // Lấy action (approve hoặc reject)
+  
+        console.log("User ID:", userId);
+        console.log("Job ID:", jobId);
+        console.log("Action:", action);
+  
+        if (!userId || !jobId || !action) {
+          alert("Thông tin không đầy đủ.");
+          return;  // Dừng lại nếu thiếu dữ liệu
+        }
+  
+        if (!confirm(`Bạn chắc chắn muốn ${action} ứng viên này?`)) return;
+  
+        // Đảm bảo rằng action có giá trị là 'approved' hoặc 'rejected'
+        if (action === 'approve') {
+          action = 'approved';
+        } else if (action === 'reject') {
+          action = 'rejected';
+        }
+  
+        // Gửi yêu cầu POST tới API
+        fetch('/update_applicant_status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            list_seeker_id: userId,  // Gửi id_user làm list_seeker_id
+            status: action,  // 'approved' hoặc 'rejected'
+            job_id: jobId  // ID của công việc
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Response from backend:", data);
+          if (data.success) {
+            // Cập nhật lại trạng thái trong bảng
+            const row = button.closest("tr");
+  
+            // Thay đổi trạng thái ngay lập tức
+            row.querySelector("td.status-col").innerText = data.new_status.charAt(0).toUpperCase() + data.new_status.slice(1);
+  
+            // Cập nhật lại các nút hành động
+            const actionsCol = row.querySelector("td.actions-col");
+            actionsCol.innerHTML = '';  // Xóa các nút hiện tại
+  
+            // Nếu trạng thái mới là 'approved' hoặc 'rejected', chỉ hiển thị nút còn lại
+            if (data.new_status === 'approved') {
+              actionsCol.innerHTML = `
+                <button class="btn btn-sm btn-danger shadow-sm btn-action"
+                        data-id="${userId}" 
+                        data-job="${jobId}" 
+                        data-action="reject">
+                  Reject
+                </button>
+              `;
+            } else if (data.new_status === 'rejected') {
+              actionsCol.innerHTML = `
+                <button class="btn btn-sm btn-success shadow-sm btn-action"
+                        data-id="${userId}" 
+                        data-job="${jobId}" 
+                        data-action="approve">
+                  Approve
+                </button>
+              `;
+            } else {
+              // Nếu là trạng thái 'Applied', hiển thị cả hai nút
+              actionsCol.innerHTML = `
+                <button class="btn btn-sm btn-success shadow-sm btn-action"
+                        data-id="${userId}" 
+                        data-job="${jobId}" 
+                        data-action="approve">
+                  Approve
+                </button>
+                <button class="btn btn-sm btn-danger shadow-sm btn-action"
+                        data-id="${userId}" 
+                        data-job="${jobId}" 
+                        data-action="reject">
+                  Reject
+                </button>
+              `;
+            }
+          } else {
+            alert("Cập nhật thất bại.");
+          }
+        })
+        .catch(err => {
+          alert("Lỗi kết nối server.");
+          console.error(err);
+        });
+      }
+    });
+  });
+  
+  
+  
+</script>
+
+
+
+
+{% endblock %}

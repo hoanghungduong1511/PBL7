@@ -1,0 +1,66 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ 'Sửa' if action == 'edit' else 'Thêm' }} Công Việc{% endblock %}
+
+{% block content %}
+<div class="pc-container">
+  <div class="pc-content">
+    <h2 class="mb-4">{{ 'Sửa' if action == 'edit' else 'Thêm' }} Công Việc</h2>
+
+    <form method="POST" action="" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Tiêu đề công việc</label>
+        <input type="text" name="job_title" class="form-control" required
+               value="{{ job.job_title if action == 'edit' else '' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Công ty</label>
+        <input type="text" name="company_name" class="form-control" required
+               value="{{ job.company_name if action == 'edit' else '' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Hình thức</label>
+        <input type="text" name="job_type" class="form-control"
+               value="{{ job.job_type if action == 'edit' else '' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Địa điểm</label>
+        <input type="text" name="location" class="form-control"
+               value="{{ job.location if action == 'edit' else '' }}">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Mức lương</label>
+        <input type="text" name="salary" class="form-control"
+               value="{{ job.salary if action == 'edit' else '' }}">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Kinh nghiệm</label>
+        <input type="text" name="experience" class="form-control"
+               value="{{ job.experience if action == 'edit' else '' }}">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Hạn nộp</label>
+        <input type="date" name="deadline" class="form-control"
+               value="{{ job.deadline.strftime('%Y-%m-%d') if action == 'edit' else '' }}">
+      </div>
+
+      <!-- ✅ Thêm trường ngành nghề -->
+      <div class="col-md-6">
+        <label class="form-label">Ngành nghề</label>
+        <input type="text" name="industry" class="form-control"
+               value="{{ job.industry if action == 'edit' else '' }}">
+      </div>
+
+      <div class="col-12 text-end">
+        <a href="{{ url_for('admin_blueprint.dashboard') }}" class="btn btn-secondary">Huỷ</a>
+        <button type="submit" class="btn btn-primary">{{ 'Cập nhật' if action == 'edit' else 'Thêm mới' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

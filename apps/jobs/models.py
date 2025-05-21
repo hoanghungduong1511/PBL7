@@ -14,6 +14,8 @@ class Job(db.Model):
     deadline = db.Column(db.Date, nullable=False)
     id_hr = db.Column(db.Integer, db.ForeignKey('user.id_user'))
 
+    industry = db.Column(db.String(100))  # ✅ Thêm dòng này
+
     def save(self):
         try:
             db.session.add(self)

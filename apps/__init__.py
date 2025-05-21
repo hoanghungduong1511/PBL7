@@ -18,9 +18,19 @@ def register_extensions(app):
     login_manager.init_app(app)
 
 def register_blueprints(app):
-    for module_name in ('authentication', 'home', 'dyn_dt', 'charts', 'jobs'):
+    modules = {
+        'authentication': 'blueprint',
+        'home': 'blueprint',
+        'dyn_dt': 'blueprint',
+        'charts': 'blueprint',
+        'jobs': 'jobs_blueprint',
+        'list_seeker': 'list_seeker_blueprint',
+        'admin': 'admin_blueprint'
+    }
+
+    for module_name, blueprint_name in modules.items():
         module = import_module(f'apps.{module_name}.routes')
-        app.register_blueprint(module.jobs_blueprint if module_name == 'jobs' else module.blueprint)
+        app.register_blueprint(getattr(module, blueprint_name))
 
 def create_app(config):
     # Cấu hình thư mục tĩnh và template
