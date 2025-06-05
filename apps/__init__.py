@@ -25,7 +25,8 @@ def register_blueprints(app):
         'charts': 'blueprint',
         'jobs': 'jobs_blueprint',
         'list_seeker': 'list_seeker_blueprint',
-        'admin': 'admin_blueprint'
+        'admin': 'admin_blueprint',
+        'notifications': 'notifications_blueprint' 
     }
 
     for module_name, blueprint_name in modules.items():

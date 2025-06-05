@@ -53,6 +53,7 @@ def create_notification():
 @notifications_blueprint.route('/get', methods=['GET'])
 @login_required
 def get_notifications():
+    print(f"[DEBUG] Đang lấy thông báo cho user: {current_user.id_user} - Role: {current_user.role}")
     user_id = current_user.id_user
     role = current_user.role  # 'HR' hoặc 'Seeker'
 

@@ -49,83 +49,82 @@
               </div>
               <!-- end -->
 
-               <!-- Nội dung thông báo sẽ được JS chèn vào đây -->
-               <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                  fetch("/notifications/get")
-                    .then(response => response.json())
-                    .then(data => {
-                      const container = document.querySelector(".dropdown-body");
-                      const badge = document.querySelector(".pc-h-badge");
-                
-                      // Chỉ đếm số lượng thông báo chưa đọc
-                      const unreadCount = data.notifications.filter(n => n.status === 'unread').length;
-                      badge.textContent = unreadCount;
-                
-                      container.innerHTML = "";
-                
-                      if (data.success && data.notifications.length > 0) {
-                        data.notifications.forEach(noti => {
-                          const card = document.createElement("div");
-                          card.className = `card mb-0 ${noti.status === 'unread' ? 'bg-light' : ''}`;
-                
-                          card.innerHTML = `
-                            <div class="card-body noti-clickable" style="cursor: pointer;" data-id="${noti.id}">
-                              <div class="d-flex">
-                                <div class="flex-shrink-0">
-                                  <img class="img-radius avtar rounded-circle"
-                                      src="${noti.avatar}" alt="avatar"
-                                      style="width: 40px; height: 40px; object-fit: cover;">
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                  <span class="float-end text-sm text-muted">${noti.created_at}</span>
-                                  <h5 class="text-body mb-2 ${noti.status === 'unread' ? 'fw-bold' : ''}">${noti.title}</h5>
-                                  <p class="mb-0">${noti.message}</p>
-                                </div>
-                              </div>
-                            </div>
-                          `;
-                
-                          // Gán sự kiện click để mark as read + redirect
-                          card.querySelector('.noti-clickable').addEventListener('click', () => {
-                            fetch("/notifications/mark_read", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ notification_id: noti.id })
-                            })
-                            .then(res => res.json())
-                            .then(result => {
-                              if (result.success) {
-                                // Sau khi mark xong thì chuyển trang
-                                window.location.href = "/my-jobs";
+               <!-- Đây là div chứa thông báo sẽ được chèn bằng JS -->
+                      <div class="dropdown-body text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
+                        <div class="text-center py-3 text-muted">Đang tải thông báo...</div>
+                      </div>
+
+                      <!-- Sau khi HTML xong thì mới chạy JS -->
+                      <script>
+                        document.addEventListener("DOMContentLoaded", function () {
+                          fetch("/notifications/get")
+                            .then(response => response.json())
+                            .then(data => {
+                              const container = document.querySelector(".dropdown-body");
+                              const badge = document.querySelector(".pc-h-badge");
+
+                              if (!container) return console.error("Không tìm thấy .dropdown-body");
+
+                              // Đếm số lượng chưa đọc
+                              const unreadCount = data.notifications.filter(n => n.status === 'unread').length;
+                              badge.textContent = unreadCount;
+
+                              container.innerHTML = "";
+
+                              if (data.success && data.notifications.length > 0) {
+                                data.notifications.forEach(noti => {
+                                  const card = document.createElement("div");
+                                  card.className = `card mb-0 ${noti.status === 'unread' ? 'bg-light' : ''}`;
+
+                                  card.innerHTML = `
+                                    <div class="card-body noti-clickable" style="cursor: pointer;" data-id="${noti.id}">
+                                      <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                          <img class="img-radius avtar rounded-circle"
+                                              src="${noti.avatar}" alt="avatar"
+                                              style="width: 40px; height: 40px; object-fit: cover;">
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                          <span class="float-end text-sm text-muted">${noti.created_at}</span>
+                                          <h5 class="text-body mb-2 ${noti.status === 'unread' ? 'fw-bold' : ''}">${noti.title}</h5>
+                                          <p class="mb-0">${noti.message}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  `;
+
+                                  card.querySelector('.noti-clickable').addEventListener('click', () => {
+                                    fetch("/notifications/mark_read", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ notification_id: noti.id })
+                                    })
+                                    .then(res => res.json())
+                                    .then(result => {
+                                      if (result.success) {
+                                        window.location.href = "/my-jobs";
+                                      }
+                                    })
+                                    .catch(err => {
+                                      console.error("Lỗi khi mark as read:", err);
+                                      window.location.href = "/my-jobs";
+                                    });
+                                  });
+
+                                  container.appendChild(card);
+                                });
+                              } else {
+                                container.innerHTML = `<div class="text-center py-3 text-muted">Không có thông báo nào</div>`;
                               }
                             })
-                            .catch(err => {
-                              console.error("Lỗi khi mark as read:", err);
-                              window.location.href = "/my-jobs"; // fallback redirect
+                            .catch(error => {
+                              console.error("Lỗi khi tải thông báo:", error);
+                              const container = document.querySelector(".dropdown-body");
+                              container.innerHTML = `<div class="text-center py-3 text-danger">Lỗi khi tải thông báo</div>`;
                             });
-                          });
-                
-                          container.appendChild(card);
                         });
-                      } else {
-                        container.innerHTML = `<div class="text-center py-3 text-muted">Không có thông báo nào</div>`;
-                      }
-                    })
-                    .catch(error => {
-                      console.error("Lỗi khi tải thông báo:", error);
-                      const container = document.querySelector(".dropdown-body");
-                      container.innerHTML = `<div class="text-center py-3 text-danger">Lỗi khi tải thông báo</div>`;
-                    });
-                });
-                </script>
-                
-                
-                <div class="dropdown-body text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
-                  <div class="text-center py-3 text-muted">Đang tải thông báo...</div>
-                </div>
-                
-              <!-- end ở đây -->
+                      </script>
+
 
               <div class="text-center py-2">
                 <a href="#!" id="clear-all-notifications" class="link-danger">Clear all Notifications</a>

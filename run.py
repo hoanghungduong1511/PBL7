@@ -43,8 +43,6 @@ with app.app_context():
         print('> Fallback to SQLite ')
         db.create_all()
 
-# Apply all changes
-Migrate(app, db)
 
 if not DEBUG:
     Minify(app=app, html=True, js=False, cssless=False)
@@ -55,4 +53,5 @@ if DEBUG:
     app.logger.info('DBMS             = ' + app_config.SQLALCHEMY_DATABASE_URI)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=5000, debug=DEBUG)
+

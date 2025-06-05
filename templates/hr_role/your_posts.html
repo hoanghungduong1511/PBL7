@@ -33,7 +33,7 @@
             <td>{{ job.salary }}</td>
             <td>{{ job.experience }}</td>
             <td>{{ job.deadline.strftime('%d/%m/%Y') }}</td>
-            <td>{{ job_applicants[job.id_job].industry or 'N/A' }}</td>
+            <td>{{ job_applicants[job.id_job]['industry'] or 'N/A' }}</td>
             <td>
               <button class="btn btn-sm btn-outline-primary toggle-applicants"
                       type="button"
@@ -45,9 +45,12 @@
 
           <!-- Collapse section -->
           <tr class="collapse" id="collapseApplicants{{ job.id_job }}">
-            <td colspan="9">
+            <td colspan="10">
               <div class="card card-body" style="margin-left: 20px;">
-                {% if job_applicants[job.id_job] %}
+                {% if job_applicants[job.id_job]['applicants'] %}
+                <p class="text-danger">
+                  Tổng ứng viên: {{ job_applicants[job.id_job]['applicants']|length }}
+                </p>
                 <div class="table-responsive">
                   <table class="table table-hover mb-0">
                     <thead>
@@ -63,12 +66,12 @@
                       </tr>
                     </thead>
                     <tbody>
-                      {% for applicant in job_applicants[job.id_job] %}
+                      {% for applicant in job_applicants[job.id_job]['applicants'] %}
                       <tr class="unread">
                         <td>
                           <img class="rounded-circle" width="40"
-                               src="{{ url_for('static', filename='uploads/avatar/' + applicant.avatar_file) if applicant.avatar_file else url_for('static', filename='assets/images/user/avatar-1.jpg') }}"
-                               alt="avatar">
+                              src="{{ url_for('static', filename='uploads/avatar/' + applicant.avatar_file) if applicant.avatar_file else url_for('static', filename='assets/images/user/avatar-1.jpg') }}"
+                              alt="avatar">
                         </td>
                         <td><h6 class="mb-1">{{ applicant.full_name }}</h6></td>
                         <td>{{ applicant.email }}</td>
@@ -76,8 +79,8 @@
                         <td>
                           {% if applicant.cv_file %}
                           <a href="{{ url_for('static', filename='uploads/cv/' + applicant.cv_file) }}"
-                             target="_blank"
-                             class="btn btn-sm btn-outline-info">View CV</a>
+                            target="_blank"
+                            class="btn btn-sm btn-outline-info">View CV</a>
                           {% else %}
                           <span class="text-muted">No CV</span>
                           {% endif %}
@@ -88,12 +91,10 @@
                           </h6>
                         </td>
                         <td class="status-col">
-                          <!-- Hiển thị trạng thái của ứng viên -->
                           {{ applicant.status.capitalize() if applicant.status else 'Applied' }}
                         </td>
                         <td class="actions-col">
                           {% if applicant.status == 'approved' %}
-                            <!-- Nếu đã approved, chỉ hiển thị nút Reject -->
                             <button class="btn btn-sm btn-danger shadow-sm btn-action"
                                     data-id="{{ applicant.id_user }}" 
                                     data-job="{{ job.id_job }}" 
@@ -101,7 +102,6 @@
                               Reject
                             </button>
                           {% elif applicant.status == 'rejected' %}
-                            <!-- Nếu đã rejected, chỉ hiển thị nút Approve -->
                             <button class="btn btn-sm btn-success shadow-sm btn-action"
                                     data-id="{{ applicant.id_user }}" 
                                     data-job="{{ job.id_job }}" 
@@ -109,7 +109,6 @@
                               Approve
                             </button>
                           {% else %}
-                            <!-- Nếu trạng thái là 'Applied', hiển thị cả hai nút -->
                             <button class="btn btn-sm btn-success shadow-sm btn-action"
                                     data-id="{{ applicant.id_user }}" 
                                     data-job="{{ job.id_job }}" 
