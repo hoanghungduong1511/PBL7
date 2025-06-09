@@ -3,7 +3,10 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-bind = '0.0.0.0:5005'
+# Azure App Service sẽ tự chọn cổng qua biến môi trường PORT,
+# nên bạn không cần chỉ định bind ở đây.
+# Gunicorn mặc định sẽ bind vào 0.0.0.0:8000 nếu không có cổng cụ thể
+
 workers = 1
 accesslog = '-'
 loglevel = 'debug'

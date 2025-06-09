@@ -9,8 +9,12 @@ from apps.jobs.routes import (
 )
 from apps.authentication.models import User
 from apps import db
-
-
+from datetime import datetime, timedelta
+import time, re, random
+from bs4 import BeautifulSoup
+import undetected_chromedriver as uc
+from apps.admin.models import BaseJob  
+from sqlalchemy import text  
 admin_blueprint = Blueprint('admin_blueprint', __name__, url_prefix='/admin')
 @admin_blueprint.route('/dashboard')
 @login_required
@@ -183,6 +187,7 @@ def edit_user(user_id):
         return redirect(url_for('admin_blueprint.user_manager'))
 
     return render_template('admin/user_form.html', user=user)
+
 @admin_blueprint.route('/user/add', methods=['GET', 'POST'])
 @login_required
 def add_user():
@@ -224,4 +229,150 @@ def add_user():
         return redirect(url_for('admin_blueprint.user_manager'))
 
     return render_template('admin/user_form.html', action='add')
+
+@admin_blueprint.route('/crawler')
+@login_required
+def crawler():
+    if session.get('role') != 'Admin':
+        return "Unauthorized", 403  # Chặn nếu không phải admin
+    return render_template('admin/crawler.html')  # Đường dẫn tới template
+
+def normalize(val):
+    if val is None:
+        return ''
+    if isinstance(val, float):
+        return str(int(val)) if val.is_integer() else str(round(val, 2))
+    return str(val).strip().lower().replace('\xa0', ' ').replace('\n', ' ')
+
+def get_existing_jobs_from_db():
+    rows = db.session.execute(
+        text("SELECT job_title, company_name, industry, location, salary, experience, create_at FROM base")
+    ).fetchall()
+    return set(tuple(normalize(col) for col in row[:6]) for row in rows)
+
+
+def convert_relative_time(time_str):
+    if "hôm nay" in time_str.lower():
+        return datetime.today().strftime("%Y-%m-%d")
+    match = re.search(r'(\d+)\s*(giờ|ngày|tuần|tháng|năm) trước', time_str)
+    if match:
+        value, unit = int(match.group(1)), match.group(2)
+        today = datetime.today()
+        if "giờ" in unit:
+            return (today - timedelta(hours=value)).strftime("%Y-%m-%d")
+        elif "ngày" in unit:
+            return (today - timedelta(days=value)).strftime("%Y-%m-%d")
+        elif "tuần" in unit:
+            return (today - timedelta(weeks=value)).strftime("%Y-%m-%d")
+        elif "tháng" in unit:
+            return (today - timedelta(days=value * 30)).strftime("%Y-%m-%d")
+        elif "năm" in unit:
+            return (today - timedelta(days=value * 365)).strftime("%Y-%m-%d")
+    return "Không xác định"
+
+@admin_blueprint.route('/admin/do-crawl', methods=['POST'])
+@login_required
+def do_crawl():
+    if session.get('role') != 'Admin':
+        return "Unauthorized", 403
+
+    base_url = "https://www.topcv.vn/tim-viec-lam-cong-nghe-thong-tin-cr257?type_keyword=0&page=1&category_family=r257&sba=1"
+    jobs = []
+    existing_jobs = get_existing_jobs_from_db()
+
+    VALID_INDUSTRY_KEYWORDS = [
+        "Engineer", "Developer", "IT", "Software", "Marketing", "Finance", "Design",
+        "Data", "Business", "HR", "Accounting", "Manager", "Sales"
+    ]
+
+    options = uc.ChromeOptions()
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920x1080")
+    options.add_argument("user-agent=Mozilla/5.0 ...")
+    # Nếu muốn chạy ẩn, thêm: options.add_argument("--headless")
+
+    driver = uc.Chrome(options=options)
+    driver.get(base_url)
+    time.sleep(5)
+
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    job_items = soup.find_all('div', class_='job-item-search-result')
+
+    for job in job_items:
+        try:
+            title = job.find('h3', class_='title').get_text(strip=True)
+            company_name = job.find('span', class_='company-name').get_text(strip=True)
+            location = job.find('span', class_='city-text').get_text(strip=True)
+            salary = job.find('label', class_='title-salary')
+            salary_text = salary.get_text(strip=True) if salary else "Thỏa thuận"
+            experience = job.find('label', class_='exp')
+            experience_text = experience.get_text(strip=True) if experience else "Không yêu cầu"
+            date_label = job.find('label', class_='address mobile-hidden label-update')
+            created_at = convert_relative_time(date_label.get_text(strip=True)) if date_label else datetime.today().strftime("%Y-%m-%d")
+
+            industry_div = job.find('div', class_='tag')
+            industries = "Không có thông tin"
+            if industry_div:
+                tags = [tag.get_text(strip=True) for tag in industry_div.find_all('a', class_='item-tag')
+                        if any(k in tag.get_text(strip=True) for k in VALID_INDUSTRY_KEYWORDS)]
+                if tags:
+                    industries = ', '.join(tags)
+
+            # ✅ Tách từng thành phố nếu có nhiều
+            
+            for loc in location.split(','):
+                loc = loc.strip()
+                job_key = (
+                    normalize(title),
+                    normalize(company_name),
+                    normalize(industries),
+                    normalize(loc),
+                    normalize(salary_text),
+                    normalize(experience_text)
+                )
+                if job_key in existing_jobs:
+                    continue  # Bỏ qua nếu đã có
+
+                jobs.append({
+                    "job_title": title,
+                    "company_name": company_name,
+                    "industry": industries,
+                    "location": loc,
+                    "salary": salary_text,
+                    "experience": experience_text,
+                    "create_at": created_at
+                })
+
+
+        except Exception as e:
+            print("Lỗi khi parse job:", e)
+            continue
+
+    driver.quit()
+    return render_template('admin/crawler.html', crawled_jobs=jobs)
+
+
+@admin_blueprint.route('/admin/save-crawled-data', methods=['POST'])
+@login_required
+def save_crawled_data():
+    if session.get('role') != 'Admin':
+        return "Unauthorized", 403
+
+    job_count = int(request.form.get('job_count', 0))
+    current_date = datetime.utcnow().date()
+
+    for i in range(job_count):
+        job = BaseJob(
+            job_title=request.form.get(f'job_title_{i}'),
+            company_name=request.form.get(f'company_name_{i}'),
+            industry=request.form.get(f'industry_{i}'),
+            location=request.form.get(f'location_{i}'),
+            salary=request.form.get(f'salary_{i}'),
+            experience=request.form.get(f'experience_{i}'),
+            create_at=current_date
+        )
+        db.session.add(job)
+
+    db.session.commit()
+    return redirect('/admin/crawler')
 

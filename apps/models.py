@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 from apps import db
 from apps.jobs.models import Job
 from sqlalchemy import func
+from apps.admin.models import BaseJob
+
 def parse_mysql_uri(uri):
     parsed = urlparse(uri)
     return {
