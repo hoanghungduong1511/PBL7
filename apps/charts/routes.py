@@ -50,35 +50,35 @@ def charts():
             cursor.execute("SELECT DISTINCT industry FROM base WHERE industry IS NOT NULL AND industry != ''")
             industries = [row['industry'] for row in cursor.fetchall()]
 
-            if request.method == 'POST':
-                industry = request.form.get('industry')
-                year = request.form.get('time_value_year')
+            # Mặc định ngành nghề là 'Tất cả ngành' và năm là 2025
+            industry = request.form.get('industry', '')  # Mặc định là không chọn ngành
+            year = request.form.get('time_value_year', '2025')  # Mặc định là năm 2025
 
-                months = list(range(1, 13))
-                locations = ['Đà Nẵng', 'Hà Nội', 'Hồ Chí Minh']
+            months = list(range(1, 13))
+            locations = ['Đà Nẵng', 'Hà Nội', 'Hồ Chí Minh']
 
-                for loc in locations:
-                    monthly_counts = []
-                    for month in months:
-                        query = """
-                            SELECT COUNT(*) AS count FROM base
-                            WHERE location = %s AND YEAR(create_at) = %s AND MONTH(create_at) = %s
-                        """
-                        params = [loc, year, month]
+            for loc in locations:
+                monthly_counts = []
+                for month in months:
+                    query = """
+                        SELECT COUNT(*) AS count FROM base
+                        WHERE location = %s AND YEAR(create_at) = %s AND MONTH(create_at) = %s
+                    """
+                    params = [loc, year, month]
 
-                        if industry:
-                            query += " AND industry = %s"
-                            params.append(industry)
-                        print(query)
-                        print(params)
-                        cursor.execute(query, tuple(params))
-                        row = cursor.fetchone()
-                        monthly_counts.append(row['count'] if row['count'] else 0)
+                    if industry:
+                        query += " AND industry = %s"
+                        params.append(industry)
 
-                    chart_data[loc] = monthly_counts
-                    totals[loc] = sum(monthly_counts)
+                    cursor.execute(query, tuple(params))
+                    row = cursor.fetchone()
+                    monthly_counts.append(row['count'] if row['count'] else 0)
 
-                summary_title = f"Thống kê số lượng công việc ngành {industry or 'Tất cả'} theo năm {year}"
+                chart_data[loc] = monthly_counts
+                totals[loc] = sum(monthly_counts)
+
+            summary_title = f"Thống kê số lượng công việc ngành {industry or 'Tất cả'} theo năm {year}"
+
     finally:
         conn.close()
 
@@ -91,7 +91,7 @@ def charts():
                            summary_title=summary_title,
                            totals=totals,
                            segment='charts')
-                           
+
 
 
 @charts_blueprint.route('/predict', methods=['GET', 'POST'])
@@ -158,33 +158,37 @@ def predict():
     df['period'] = pd.to_datetime(df['period'])
 
     if time_type == 'quarter':
-        df['period'] = df['period'].dt.to_period('Q').dt.to_timestamp()
-        offset = pd.DateOffset(months=3)
-        window_size = 4
+        # Chuyển từ quý thành tháng, chia đều công việc trong mỗi quý cho 3 tháng
+        df['quarter'] = df['period'].dt.to_period('Q')
+        grouped = df.groupby('quarter')['total'].sum()  # Tính tổng công việc theo quý
+
+        # Chuyển đổi quý thành tháng, mỗi quý có 3 tháng
+        monthly_data = []
+        for total in grouped:
+            monthly_data.extend([total / 3] * 3)  # Mỗi quý chia đều cho 3 tháng
+
+        # Tạo lại dữ liệu theo tháng
+        df = pd.DataFrame({'period': pd.date_range(start=df['period'].min(), periods=len(monthly_data), freq='M'),
+                           'total': monthly_data})
+        offset = pd.DateOffset(months=1)
+        window_size = 12  # 12 tháng
     else:
         df['period'] = df['period'].dt.to_period('M').dt.to_timestamp()
+        grouped = df.groupby('period')['total'].sum()  # Tổng công việc theo tháng
         offset = pd.DateOffset(months=1)
-        window_size = 12
-
-    grouped = df.groupby('period')['total'].sum().sort_index()
-    if len(grouped) < window_size:
-        summary_title = f"Không đủ dữ liệu (cần ít nhất {window_size} kỳ liên tục) để dự đoán."
-        return render_template('charts/predict.html',
-                               industries=industries,
-                               locations=locations,
-                               real_data=grouped.tolist(),
-                               predicted_data=[],
-                               categories=[d.strftime('%Y-%m') if time_type == 'month' else f"{d.year}-Q{(d.month - 1)//3 + 1}" for d in grouped.index],
-                               summary_title=summary_title,
-                               segment='charts',
-                               selected_industry=industry,
-                               selected_location=location,
-                               time_type=time_type)
+        window_size = 12  # 12 tháng
 
     grouped = grouped[-window_size:]
     real_data = [round(x) for x in grouped.values.tolist()]
     real_dates = list(grouped.index)
 
+    # Cập nhật để đảm bảo các giá trị trong real_dates là Timestamp, không phải Period
+    real_dates = [d.to_timestamp() if isinstance(d, pd.Period) else d for d in real_dates]
+
+    # Tính toán các ngày tương lai bằng cách cộng `offset` vào `Timestamp`
+    future_dates = [real_dates[-1] + offset * i for i in range(1, window_size + 1)]
+
+    # Tạo lớp AttentionLayer
     @register_keras_serializable()
     class AttentionLayer(Layer):
         def __init__(self, **kwargs): super().__init__(**kwargs)
@@ -201,6 +205,7 @@ def predict():
     scaled = scaler.fit_transform(np.array(real_data).reshape(-1, 1))
     X_input = scaled.reshape(1, window_size, 1)
 
+    # Load mô hình
     model = load_model(r"D:\My folder\HK8\PBL7\SRC\apps\charts\models\Model_BiLSTM_Attention_Trend.keras", 
                        custom_objects={'AttentionLayer': AttentionLayer})
 
@@ -212,7 +217,6 @@ def predict():
 
     predicted_data = scaler.inverse_transform(np.array(predicted).reshape(-1, 1)).flatten()
     predicted_data = [round(x) for x in predicted_data]
-    future_dates = [real_dates[-1] + offset * i for i in range(1, window_size + 1)]
 
     # Vẽ biểu đồ
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -250,4 +254,5 @@ def predict():
                            selected_location=location,
                            time_type=time_type,
                            segment='charts')
+
 

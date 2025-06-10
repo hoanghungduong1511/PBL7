@@ -1,63 +1,66 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}Predict{% endblock title %}
+{% block title %}Dự đoán xu hướng việc làm{% endblock title %}
 
 {% block content %}
 <div class="pc-container">
   <div class="pc-content">
 
+    <!-- Tiêu đề chính -->
+    <div class="mb-4 text-center">
+      <h2 class="fw-bold text-primary">Dự đoán xu hướng tuyển dụng</h2>
+    </div>
+
     <!-- Form lọc PREDICT -->
-    <div class="mb-4">
-      <button class="btn btn-outline-primary" id="toggleFilterBtn">
-        <i data-feather="search"></i> Bộ lọc dự đoán
-      </button>
-      <div id="predictFilterFormWrapper" style="display: none; margin-top: 15px;">
-        <form id="predict-filter-form" method="POST" action="{{ url_for('charts_blueprint.predict') }}">
-          <div class="row g-3">
-
-            <!-- Ngành nghề -->
-            <div class="col-md-4">
-              <label class="form-label">Ngành nghề</label>
-              <select class="form-select" name="industry">
-                <option value="">-- Tất cả ngành --</option>
-                {% if industries %}
-                  {% for ind in industries %}
-                    <option value="{{ ind }}" {% if ind == selected_industry %}selected{% endif %}>{{ ind }}</option>
-                  {% endfor %}
-                {% endif %}
-              </select>
-            </div>
-
-            <!-- Địa điểm -->
-            <div class="col-md-4">
-              <label class="form-label">Địa điểm</label>
-              <select class="form-select" name="location">
-                <option value="">-- Tất cả địa điểm --</option>
-                {% if locations %}
-                  {% for loc in locations %}
-                    <option value="{{ loc }}" {% if loc == selected_location %}selected{% endif %}>{{ loc }}</option>
-                  {% endfor %}
-                {% endif %}
-              </select>
-            </div>
-
-            <!-- Kiểu thời gian -->
-            <div class="col-md-4">
-              <label class="form-label">Kiểu thời gian</label>
-              <select class="form-select" name="time_type" id="time-type-select">
-                <option value="month" {% if time_type == 'month' %}selected{% endif %}>Theo tháng</option>
-                <option value="quarter" {% if time_type == 'quarter' %}selected{% endif %}>Theo quý</option>
-              </select>
-            </div>
-
-            <!-- Nút Dự đoán -->
-            <div class="col-md-4 d-flex align-items-end">
-              <button type="submit" class="btn btn-primary w-100">Dự đoán</button>
-            </div>
-
+    <div class="mb-4" id="predictFilterFormWrapper">
+      <form id="predict-filter-form" method="POST" action="{{ url_for('charts_blueprint.predict') }}">
+        <div class="row g-3 align-items-end">
+          
+          <!-- Ngành nghề -->
+          <div class="col-md-3">
+            <label class="form-label">Ngành nghề</label>
+            <select class="form-select" name="industry">
+              <option value="">-- Tất cả ngành --</option>
+              {% if industries %}
+                {% for ind in industries %}
+                  <option value="{{ ind }}" {% if ind == selected_industry %}selected{% endif %}>{{ ind }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
           </div>
-        </form>
-      </div>
+
+          <!-- Địa điểm -->
+          <div class="col-md-3">
+            <label class="form-label">Địa điểm</label>
+            <select class="form-select" name="location">
+              <option value="">-- Tất cả địa điểm --</option>
+              {% if locations %}
+                {% for loc in locations %}
+                  <option value="{{ loc }}" {% if loc == selected_location %}selected{% endif %}>{{ loc }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+
+          <!-- Kiểu thời gian -->
+          <div class="col-md-3">
+            <label class="form-label">Kiểu thời gian</label>
+            <select class="form-select" name="time_type" id="time-type-select">
+              <option value="month" {% if time_type == 'month' %}selected{% endif %}>Theo tháng</option>
+              <option value="quarter" {% if time_type == 'quarter' %}selected{% endif %}>Theo quý</option>
+            </select>
+          </div>
+
+          <!-- Nút Dự đoán -->
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100" id="predictBtn">
+              Dự đoán
+              <span id="loading-spinner" class="spinner-border spinner-border-sm" style="display: none;" role="status" aria-hidden="true"></span> <!-- Hiệu ứng loading -->
+            </button>
+          </div>
+
+        </div>
+      </form>
     </div>
 
     {% if request.method == 'POST' %}
@@ -74,15 +77,43 @@
       {% endif %}
 
       {% if chart_image %}
-      <div class="card">
-        <div class="card-header"><h5>Dự đoán dữ liệu</h5></div>
-        <div class="card-body text-center">
-          <img src="data:image/png;base64,{{ chart_image }}" alt="Chart" class="img-fluid" />
-        </div>
-      </div>
-      {% endif %}
-    {% endif %}
+        <div class="row">
+          <!-- Cột trái: Biểu đồ và Cột phải: Nhận xét xu hướng nằm trong cùng một card -->
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header text-center">
+                <h5>Dự đoán xu hướng tuyển dụng</h5>
+              </div>
+              <div class="card-body d-flex">
+                <!-- Cột trái: Biểu đồ -->
+                <div class="col-md-6 text-center">
+                  <img src="data:image/png;base64,{{ chart_image }}" alt="Chart" class="img-fluid" />
+                </div>
 
+                <!-- Cột phải: Nhận xét xu hướng -->
+                <div class="col-md-6">
+                  <h5>Nhận xét xu hướng</h5>
+                    <p class="text-muted">
+                      {% if predicted_data %}
+                        {% if predicted_data[-1] > real_data[-1] %}
+                          <strong>Tháng {{ categories[-1] }}:</strong> Dự báo **tăng trưởng mạnh** trong các kỳ tiếp theo. Cơ hội tuyển dụng có thể gia tăng trong tháng này. **Tận dụng cơ hội** để **tăng cường tuyển dụng** hoặc **đào tạo** thêm nhân lực.
+                        {% elif predicted_data[-1] < real_data[-1] %}
+                          <strong>Tháng {{ categories[-1] }}:</strong> Dự báo **giảm nhẹ** so với tháng trước. Bạn nên **thận trọng** và xem xét lại chiến lược tuyển dụng hoặc tìm kiếm ứng viên với **kỹ năng cao hơn**.
+                        {% else %}
+                          <strong>Tháng {{ categories[-1] }}:</strong> Dự báo **ổn định**, không có sự thay đổi lớn so với tháng trước. Đây là thời điểm **duy trì các chiến lược hiện tại**, nhưng đừng quên theo dõi xu hướng trong các tháng tiếp theo.
+                        {% endif %}
+                      {% else %}
+                        Không đủ dữ liệu để đưa ra nhận xét.
+                      {% endif %}
+                    </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+    {% endif %}
   </div>
 </div>
 {% endblock content %}
@@ -90,10 +121,12 @@
 {% block extra_js %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const toggleBtn = document.getElementById('toggleFilterBtn');
-    const filterWrapper = document.getElementById('predictFilterFormWrapper');
-    toggleBtn.addEventListener('click', () => {
-      filterWrapper.style.display = filterWrapper.style.display === 'none' ? 'block' : 'none';
+    const predictBtn = document.getElementById('predictBtn');
+    const loadingSpinner = document.getElementById('loading-spinner');
+  
+    // Hiệu ứng loading khi bấm Dự đoán
+    predictBtn.addEventListener('click', function () {
+      loadingSpinner.style.display = 'inline-block';  // Hiển thị spinner khi bấm nút
     });
   });
 </script>
