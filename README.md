@@ -8,8 +8,8 @@ Dự án "Dự đoán xu hướng việc làm" nhằm mục tiêu dự đoán xu
 
 1. Đầu tiên, bạn cần clone repository này về máy của mình:
 
-2.Tiếp theo, cài đặt tất cả các thư viện Python cần thiết cho dự án bằng cách sử dụng pip
-pip install -r requirements.txt
+2. Tiếp theo, cài đặt tất cả các thư viện Python cần thiết cho dự án bằng cách sử dụng pip
+  pip install -r requirements.txt
 
 3. Nhấn Flask run để chạy chương trình
 
