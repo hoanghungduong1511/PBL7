@@ -18,7 +18,7 @@ Dự án "Dự đoán xu hướng việc làm" nhằm mục tiêu dự đoán xu
 
 ### Các phần cần chú ý:
 - **Link Database:** <https://dbdiagram.io/d/680a0a541ca52373f52dc88b>
-- **Slide:**  `<https://www.canva.com/design/DAGp815VW5c/rDQROYBAiggY_TyIAGPKOg/edit?utm_content=DAGp815VW5c&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton>`
-- **Report:** `<https://docs.google.com/document/d/1-ONSGYVzXXBiLqZTSVZP8wsA4lx06plPfnFf7cN6aac/edit?usp=sharing>` .
+- **Slide:**  <https://www.canva.com/design/DAGp815VW5c/rDQROYBAiggY_TyIAGPKOg/edit?utm_content=DAGp815VW5c&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton>
+- **Report:** <https://docs.google.com/document/d/1-ONSGYVzXXBiLqZTSVZP8wsA4lx06plPfnFf7cN6aac/edit?usp=sharing>
   
 
