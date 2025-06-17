@@ -2,15 +2,16 @@
 
 ## Mô Tả
 
-Dự án "Dự đoán xu hướng việc làm" nhằm mục tiêu dự đoán xu hướng tuyển dụng trong các ngành nghề khác nhau, sử dụng dữ liệu thu thập từ Top CV. Dự án này sử dụng web scraping để thu thập dữ liệu từ website Top CV, sau đó áp dụng các mô hình học sâu như Bi-LSTM kết hợp với GRU để phân tích xu hướng việc làm theo thời gian. Kết quả của dự án cung cấp cái nhìn sâu sắc về nhu cầu tuyển dụng trong tương lai, từ đó giúp các công ty, tổ chức hiểu rõ hơn về thị trường lao động và có những chiến lược tuyển dụng phù hợp.
+Dự án "Dự đoán xu hướng việc làm" được xây dựng nhằm phân tích và dự báo xu hướng tuyển dụng trong các ngành nghề khác nhau tại Việt Nam thông qua dữ liệu thực tế thu thập từ trang tuyển dụng TopCV. Sử dụng kỹ thuật web scraping, hệ thống tự động thu thập thông tin việc làm như tiêu đề công việc, kỹ năng yêu cầu, địa điểm, mức lương và thời gian đăng tuyển. Dữ liệu sau khi thu thập được xử lý, chuẩn hóa và áp dụng các kỹ thuật xử lý ngôn ngữ tự nhiên (NLP) nhằm trích xuất thông tin giá trị. Các mô hình học sâu tiên tiến như Bi-LSTM (Bidirectional Long Short-Term Memory) và GRU (Gated Recurrent Unit) được triển khai để phát hiện xu hướng biến đổi theo thời gian, từ đó đưa ra dự đoán nhu cầu việc làm trong tương lai theo từng ngành nghề, khu vực và kỹ năng. Kết quả của dự án mang lại cái nhìn toàn diện và có chiều sâu về thị trường lao động, giúp người tìm việc định hướng nghề nghiệp phù hợp, đồng thời hỗ trợ các doanh nghiệp và tổ chức trong việc đưa ra chiến lược tuyển dụng hiệu quả. Bên cạnh đó, hệ thống được tích hợp với giao diện web thân thiện phát triển bằng Flask, cho phép người dùng truy cập, tra cứu và trực quan hóa dữ liệu xu hướng một cách dễ dàng và thuận tiện.
 
 ## Cài Đặt
 
 1. Đầu tiên, bạn cần clone repository này về máy của mình:
 
-2. Tiếp theo, cài đặt tất cả các thư viện Python cần thiết cho dự án bằng cách sử dụng pip
-2.1  cài đặt các bảng trong database như link ở dưới  
-2.2  pip install -r requirements.txt
+2. Tiếp theo, cài đặt tất cả các thư viện Python cần thiết cho dự án bằng cách sử dụng pip:
+2.1  Khởi tạo môi trường venv
+2.2  Cài đặt các bảng trong database như link ở dưới  
+2.3  pip install -r requirements.txt
 
 4. Nhấn Flask run để chạy chương trình
 
