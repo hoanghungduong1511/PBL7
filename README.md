@@ -9,6 +9,7 @@ Dự án "Dự đoán xu hướng việc làm" được xây dựng nhằm phân
 1. Đầu tiên, bạn cần clone repository này về máy của mình:
 
 2. Tiếp theo, cài đặt tất cả các thư viện Python cần thiết cho dự án bằng cách sử dụng pip:
+   
 2.1  Khởi tạo môi trường venv
 2.2  Cài đặt các bảng trong database như link ở dưới  
 2.3  pip install -r requirements.txt
